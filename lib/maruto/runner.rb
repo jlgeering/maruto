@@ -6,17 +6,18 @@ require 'thor'
 class Maruto::Runner < Thor
 	include Thor::Actions
 
-	desc "magento? MAGENTO_ROOT", "check if MAGENTO_ROOT contains a magento app"
-	def magento?(magento_root)
-		magento_root = Pathname.new(magento_root).cleanpath
-		check_magento_folder(magento_root)
+	desc "magento?", "check if MAGENTO_ROOT contains a magento app"
+	method_option :magento_root, :aliases => "-m", :default => "."
+	def magento?()
+		check_magento_folder()
+		puts "OK"
 	end
 
-	desc "lint MAGENTO_ROOT", "lint php files in MAGENTO_ROOT/app/code"
-	def lint(magento_root)
+	desc "lint", "lint php files in MAGENTO_ROOT/app/code"
+	method_option :magento_root, :aliases => "-m", :default => "."
+	def lint()
 
-		magento_root = Pathname.new(magento_root).cleanpath
-		check_magento_folder(magento_root)
+		magento_root = check_magento_folder()
 
 		# TODO move this into a lint_php method
 		inside(magento_root) do
@@ -33,11 +34,11 @@ class Maruto::Runner < Thor
 		end
 	end
 
-	desc "events MAGENTO_ROOT", "list events and their observers"
-	def events(magento_root)
+	desc "events", "list configured events and their observers"
+	method_option :magento_root, :aliases => "-m", :default => "."
+	def events()
 
-		magento_root = Pathname.new(magento_root).cleanpath
-		check_magento_folder(magento_root)
+		magento_root = check_magento_folder()
 
 		magento_config = Maruto::MagentoConfig.new magento_root
 
@@ -51,7 +52,9 @@ class Maruto::Runner < Thor
 	end
 
 	no_commands do
-		def check_magento_folder(magento_root)
+		def check_magento_folder()
+			magento_root = Pathname.new(options[:magento_root]).cleanpath
+
 			raise Thor::Error, "not a folder: #{magento_root}" unless magento_root.directory?
 
 			is_magento = (magento_root + 'app').directory? &&
@@ -59,7 +62,9 @@ class Maruto::Runner < Thor
 			             (magento_root + 'app/etc').directory? &&
 			             (magento_root + 'app/etc/modules').directory? &&
 			             (magento_root + 'app/etc/local.xml').file?
-			raise Thor::Error, "could not find magento in this folder: #{magento_root}" unless is_magento
+			raise Thor::Error, "could not find magento in this folder: #{magento_root.realpath}#{options[:magento_root] == '.' ? ' (try -m MAGENTO_ROOT)' : ''}" unless is_magento
+
+			return magento_root
 		end
 	end
 end
