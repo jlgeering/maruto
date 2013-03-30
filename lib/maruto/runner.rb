@@ -34,15 +34,15 @@ class Maruto::Runner < Thor
 		end
 	end
 
-	desc "events", "list configured events and their observers"
+	desc "observers", "list observers grouped by their events"
 	method_option :magento_root, :aliases => "-m", :default => "."
-	def events()
+	def observers()
 
 		magento_root = check_magento_folder()
 
 		magento_config = Maruto::MagentoConfig.new magento_root
 
-		magento_config.events.sort_by { |k, v| k }.each do |event, observers|
+		magento_config.observers.sort_by { |k, v| k }.each do |event, observers|
 			puts event
 			observers.each do |observer|
 				puts "   #{observer}"

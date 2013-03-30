@@ -89,7 +89,7 @@ module Maruto
 			Hash[tsort.map { |name| [name, @modules[name]] }]
 		end
 
-		def events()
+		def observers()
 			@global_events_observers
 		end
 
