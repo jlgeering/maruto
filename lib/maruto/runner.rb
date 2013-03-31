@@ -34,7 +34,22 @@ class Maruto::Runner < Thor
 		end
 	end
 
-	desc "observers", "list observers grouped by their events"
+	desc "models", "list models sorted and grouped by their group_name"
+	method_option :magento_root, :aliases => "-m", :default => "."
+	def models()
+
+		magento_root = check_magento_folder()
+
+		magento_config = Maruto::MagentoConfig.new magento_root
+
+		magento_config.models.sort_by { |k, v| k }.each do |name,group|
+			puts "#{name} #{group}"
+		end
+
+
+	end
+
+	desc "observers", "list observers sorted and grouped by their events"
 	method_option :magento_root, :aliases => "-m", :default => "."
 	def observers()
 
