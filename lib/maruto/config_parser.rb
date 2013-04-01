@@ -32,4 +32,10 @@ module Maruto::ConfigParser
 		doc.xpath('//modules/*').map { |xml_node| self.parse_module_definition(xml_node).merge({:defined => path}) }
 	end
 
+	def self.parse_all_module_definitions(magento_root)
+		Dir.chdir(magento_root) do
+			Dir.glob('app/etc/modules/*.xml').reduce([]) { |result, path| result + self.parse_module_definition_file(path) }
+		end
+	end
+
 end

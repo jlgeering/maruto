@@ -135,5 +135,15 @@ describe "Config Parser" do
 			end
 		end
 	end
+
+	it "will parse all module definition files in app/etc/modules" do
+		a = Maruto::ConfigParser.parse_all_module_definitions(@magento_root)
+		a.must_be_kind_of Array
+		a.size.must_be :>, 0
+		a.each do |m|
+			m.must_include :name
+		end
+	end
+
 end
 
