@@ -47,22 +47,23 @@ describe "Config Parser" do
 		it "will return a Hash" do
 			h = Maruto::ConfigParser.parse_module_definition(@xml_nodes[:Mage_Core])
 			h.must_be_kind_of Hash
-			h.must_include :Mage_Core
-			h[:Mage_Core].must_include :code_pool
-			h[:Mage_Core].must_include :active
-			h[:Mage_Core].wont_include :dependencies
-			h[:Mage_Core].wont_include :warnings
-			h[:Mage_Core][:code_pool].must_equal :core
-			h[:Mage_Core][:active].must_equal true
+			h.must_include :name
+			h.must_include :code_pool
+			h.must_include :active
+			h.wont_include :dependencies
+			h.wont_include :warnings
+			h[:name].must_equal :Mage_Core
+			h[:code_pool].must_equal :core
+			h[:active].must_equal true
 		end
 
 		it "will find dependencies" do
-			h = Maruto::ConfigParser.parse_module_definition(@xml_nodes[:Mage_Eav])[:Mage_Eav]
+			h = Maruto::ConfigParser.parse_module_definition(@xml_nodes[:Mage_Eav])
 			h.must_include :dependencies
 			h[:dependencies].size.must_equal 1
 			h[:dependencies].must_include :Mage_Core
 
-			h = Maruto::ConfigParser.parse_module_definition(@xml_nodes[:Mage_Customer])[:Mage_Customer]
+			h = Maruto::ConfigParser.parse_module_definition(@xml_nodes[:Mage_Customer])
 			h.must_include :dependencies
 			h[:dependencies].size.must_equal 2
 			h[:dependencies].must_include :Mage_Dataflow
@@ -75,13 +76,13 @@ describe "Config Parser" do
 						<active>false</active>
 						<codePool>core</codePool>
 				</modname>
-			''').root)[:modname][:active].must_equal false
+			''').root)[:active].must_equal false
 			Maruto::ConfigParser.parse_module_definition(Nokogiri::XML('''
 				<modname>
 						<active>off</active>
 						<codePool>core</codePool>
 				</modname>
-			''').root)[:modname][:active].must_equal false
+			''').root)[:active].must_equal false
 		end
 
 		it "will warn when active is not in 'true', 'false' or 'off'" do
@@ -90,7 +91,7 @@ describe "Config Parser" do
 						<active>hello</active>
 						<codePool>core</codePool>
 				</modname>
-			''').root)[:modname]
+			''').root)
 			h.must_include :active
 			h.must_include :warnings
 			# any string that is not false or off => active
@@ -105,7 +106,7 @@ describe "Config Parser" do
 						<active>true</active>
 						<codePool>other</codePool>
 				</modname>
-			''').root)[:modname]
+			''').root)
 			h.must_include :warnings
 		end
 	end
