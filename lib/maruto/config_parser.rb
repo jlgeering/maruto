@@ -6,8 +6,8 @@ module Maruto::ConfigParser
 	def self.parse_module_definition(xml_node)
 		module_definition = {
 			:name      => xml_node.name.to_sym,
-			:active       => !(/^(false|off)$/ =~ xml_node.at_xpath('active').content),
-			:code_pool    => xml_node.at_xpath('codePool').content.to_sym,
+			:active    => !(/^(false|off)$/ =~ xml_node.at_xpath('active').content),
+			:code_pool => xml_node.at_xpath('codePool').content.to_sym,
 		}
 
 		deps = xml_node.xpath('depends/*').map { |e| e.name.to_sym }
@@ -22,6 +22,14 @@ module Maruto::ConfigParser
 		end
 
 		module_definition
+	end
+
+	def self.parse_module_definition_file(path)
+		f = File.open(path)
+		doc = Nokogiri::XML(f) { |config| config.strict }
+		f.close
+
+		doc.xpath('//modules/*').map { |xml_node| self.parse_module_definition(xml_node).merge({:defined => path}) }
 	end
 
 end

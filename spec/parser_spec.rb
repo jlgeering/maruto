@@ -40,6 +40,8 @@ describe "Config Parser" do
 				</depends>
 			</Mage_Eav>
 		''').root
+
+		@magento_root = File.expand_path('../../fixtures/magento_root', __FILE__)
 	end
 
 	describe "when parsing a module definition" do
@@ -108,6 +110,29 @@ describe "Config Parser" do
 				</modname>
 			''').root)
 			h.must_include :warnings
+		end
+	end
+
+	describe "when parsing a module definition file" do
+		it "will return an Array of module definitions" do
+			Dir.chdir(@magento_root) do
+				a = Maruto::ConfigParser.parse_module_definition_file('app/etc/modules/Mage_Api.xml')
+				a.must_be_kind_of Array
+				a.size.must_equal 1
+				a[0].must_include :name
+				a[0][:name].must_equal :Mage_Api
+			end
+		end
+		it "will include the relative path to the file to the module definition" do
+			Dir.chdir(@magento_root) do
+				file = 'app/etc/modules/Mage_All.xml'
+				a = Maruto::ConfigParser.parse_module_definition_file(file)
+				a.size.must_be :>, 0
+				a.each do |m|
+					m.must_include :defined
+					m[:defined].must_equal file
+				end
+			end
 		end
 	end
 end
