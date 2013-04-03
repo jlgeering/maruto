@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/jlgeering/maruto.png)](https://travis-ci.org/jlgeering/maruto)
+
+
 # Maruto
 
 Magento Ruby Tools
