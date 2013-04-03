@@ -145,5 +145,95 @@ describe "Config Parser" do
 		end
 	end
 
+	describe "when analysing module definitions" do
+		before do
+			@module_a = { :name => :Mage_A, :code_pool => :core, :defined => 'a'}
+			@module_b = { :name => :Mage_B, :code_pool => :core, :defined => 'b'}
+			@module_c = { :name => :Mage_C, :code_pool => :core, :defined => 'c'}
+			@module_d = { :name => :Mage_D, :code_pool => :core, :defined => 'd'}
+		end
+		it "will return an Array and a Hash" do
+			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, [])
+			a.must_be_kind_of Array
+			h.must_be_kind_of Hash
+		end
+		it "will not include inactive modules (in Array or Hash)" do
+			parsed_module_definitions = [
+				@module_a.merge({ :active => false}),
+			]
+			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a.size.must_equal 0
+			h.size.must_equal 0
+		end
+		it "will remove missing dependencies and add a warning" do
+			parsed_module_definitions = [
+				@module_a.merge({ :active => true, :dependencies => [:Mage_B, :Mage_C], :warnings => ['first warning']}),
+				@module_b.merge({ :active => true }),
+				@module_c.merge({ :active => false }),
+			]
+			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			h[:Mage_A][:dependencies].size.must_equal 1
+			h[:Mage_A][:warnings].size.must_equal 2
+		end
+		it "will remove duplicate dependencies and add a warning" do
+			parsed_module_definitions = [
+				@module_a.merge({ :active => true, :dependencies => [:Mage_B, :Mage_C, :Mage_B], :warnings => ['first warning']}),
+				@module_b.merge({ :active => true }),
+				@module_c.merge({ :active => true }),
+			]
+			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			h[:Mage_A][:dependencies].size.must_equal 2
+			h[:Mage_A][:warnings].size.must_equal 2
+		end
+		it "will deactivate modules with an invalid name and add a warning" do
+			parsed_module_definitions = [
+				{ :name => :a, :active => true, :defined => 'a', :warnings => ['first warning'] },
+			]
+			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			parsed_module_definitions[0][:active].must_equal false
+			parsed_module_definitions[0][:warnings].size.must_equal 2
+			parsed_module_definitions[0][:warnings][-1].must_include "invalid module name"
+		end
+		it "will add the path to the module's config.xml" do
+			parsed_module_definitions = [
+				@module_a.merge({ :active => true }),
+			]
+			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			h[:Mage_A][:config_path].must_equal 'app/code/core/Mage/A/etc/config.xml'
+			h[:Mage_A].wont_include :warnings
+		end
+		it "will deactivate modules without a config.xml and add a warning" do
+			parsed_module_definitions = [
+				{ :name => :Mage_E, :code_pool => :core, :active => true, :defined => 'e', :warnings => ['first warning'] },
+			]
+			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			parsed_module_definitions[0][:active].must_equal false
+			parsed_module_definitions[0][:warnings].size.must_equal 2
+		end
+		it "will sort the Array according to module dependencies" do
+			parsed_module_definitions = [
+				@module_a.merge({ :active => true, :dependencies => [:Mage_D] }),
+				@module_b.merge({ :active => true }),
+				@module_c.merge({ :active => true, :dependencies => [:Mage_B, :Mage_A] }),
+				@module_d.merge({ :active => true, :dependencies => [:Mage_B] }),
+			]
+			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a.map{|m| m[:name]}.must_equal [:Mage_B, :Mage_D, :Mage_A, :Mage_C]
+		end
+		it "will deactivate the first one, add a warning on the second one and use the second one to the Hash when 2 active modules have the same name" do
+			parsed_module_definitions = [
+				@module_a.merge({ :active => true }),
+				@module_a.merge({ :active => true, :defined => 'b' }),
+			]
+			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a.size.must_equal 1
+			h.size.must_equal 1
+			parsed_module_definitions[0][:active].must_equal false
+			a[0][:active].must_equal true
+			a[0][:defined].must_equal 'b'
+			a[0].must_include :warnings
+		end
+	end
+
 end
 
