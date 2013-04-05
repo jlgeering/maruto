@@ -2,7 +2,7 @@ require 'maruto/base'
 require 'nokogiri'
 require 'tsort'
 
-module Maruto::ConfigParser
+module Maruto::ModuleDefinition
 
 	def self.parse_module_definition(xml_node)
 		module_definition = {

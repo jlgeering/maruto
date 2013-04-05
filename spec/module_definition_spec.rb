@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-require 'maruto/config_parser'
+require 'maruto/module_definition'
 
-describe "Config Parser" do
+describe Maruto::ModuleDefinition do
 
 	before do
 		@xml_nodes = {}
@@ -47,7 +47,7 @@ describe "Config Parser" do
 	describe "when parsing a module definition" do
 
 		it "will return a Hash" do
-			h = Maruto::ConfigParser.parse_module_definition(@xml_nodes[:Mage_Core])
+			h = Maruto::ModuleDefinition.parse_module_definition(@xml_nodes[:Mage_Core])
 			h.must_be_kind_of Hash
 			h.must_include :name
 			h.must_include :code_pool
@@ -60,12 +60,12 @@ describe "Config Parser" do
 		end
 
 		it "will find dependencies" do
-			h = Maruto::ConfigParser.parse_module_definition(@xml_nodes[:Mage_Eav])
+			h = Maruto::ModuleDefinition.parse_module_definition(@xml_nodes[:Mage_Eav])
 			h.must_include :dependencies
 			h[:dependencies].size.must_equal 1
 			h[:dependencies].must_include :Mage_Core
 
-			h = Maruto::ConfigParser.parse_module_definition(@xml_nodes[:Mage_Customer])
+			h = Maruto::ModuleDefinition.parse_module_definition(@xml_nodes[:Mage_Customer])
 			h.must_include :dependencies
 			h[:dependencies].size.must_equal 2
 			h[:dependencies].must_include :Mage_Dataflow
@@ -73,13 +73,13 @@ describe "Config Parser" do
 		end
 
 		it "will treat any module that is <active>false</active> or <active>off</active> as inactive" do
-			Maruto::ConfigParser.parse_module_definition(Nokogiri::XML('''
+			Maruto::ModuleDefinition.parse_module_definition(Nokogiri::XML('''
 				<modname>
 						<active>false</active>
 						<codePool>core</codePool>
 				</modname>
 			''').root)[:active].must_equal false
-			Maruto::ConfigParser.parse_module_definition(Nokogiri::XML('''
+			Maruto::ModuleDefinition.parse_module_definition(Nokogiri::XML('''
 				<modname>
 						<active>off</active>
 						<codePool>core</codePool>
@@ -88,7 +88,7 @@ describe "Config Parser" do
 		end
 
 		it "will warn when active is not in 'true', 'false' or 'off'" do
-			h = Maruto::ConfigParser.parse_module_definition(Nokogiri::XML('''
+			h = Maruto::ModuleDefinition.parse_module_definition(Nokogiri::XML('''
 				<modname>
 						<active>hello</active>
 						<codePool>core</codePool>
@@ -103,7 +103,7 @@ describe "Config Parser" do
 		end
 
 		it "will warn when codePool is not in 'core', 'community' or 'local'" do
-			h = Maruto::ConfigParser.parse_module_definition(Nokogiri::XML('''
+			h = Maruto::ModuleDefinition.parse_module_definition(Nokogiri::XML('''
 				<modname>
 						<active>true</active>
 						<codePool>other</codePool>
@@ -116,7 +116,7 @@ describe "Config Parser" do
 	describe "when parsing a module definition file" do
 		it "will return an Array of module definitions" do
 			Dir.chdir(@magento_root) do
-				a = Maruto::ConfigParser.parse_module_definition_file('app/etc/modules/Mage_Api.xml')
+				a = Maruto::ModuleDefinition.parse_module_definition_file('app/etc/modules/Mage_Api.xml')
 				a.must_be_kind_of Array
 				a.size.must_equal 1
 				a[0].must_include :name
@@ -126,7 +126,7 @@ describe "Config Parser" do
 		it "will include the relative path to the file to the module definition" do
 			Dir.chdir(@magento_root) do
 				file = 'app/etc/modules/Mage_All.xml'
-				a = Maruto::ConfigParser.parse_module_definition_file(file)
+				a = Maruto::ModuleDefinition.parse_module_definition_file(file)
 				a.size.must_be :>, 0
 				a.each do |m|
 					m.must_include :defined
@@ -137,7 +137,7 @@ describe "Config Parser" do
 	end
 
 	it "will parse all module definition files in app/etc/modules" do
-		a = Maruto::ConfigParser.parse_all_module_definitions(@magento_root)
+		a = Maruto::ModuleDefinition.parse_all_module_definitions(@magento_root)
 		a.must_be_kind_of Array
 		a.size.must_be :>, 0
 		a.each do |m|
@@ -153,7 +153,7 @@ describe "Config Parser" do
 			@module_d = { :name => :Mage_D, :code_pool => :core, :defined => 'd'}
 		end
 		it "will return an Array and a Hash" do
-			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, [])
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, [])
 			a.must_be_kind_of Array
 			h.must_be_kind_of Hash
 		end
@@ -161,7 +161,7 @@ describe "Config Parser" do
 			parsed_module_definitions = [
 				@module_a.merge({ :active => false}),
 			]
-			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
 			a.size.must_equal 0
 			h.size.must_equal 0
 		end
@@ -171,7 +171,7 @@ describe "Config Parser" do
 				@module_b.merge({ :active => true }),
 				@module_c.merge({ :active => false }),
 			]
-			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
 			h[:Mage_A][:dependencies].size.must_equal 1
 			h[:Mage_A][:warnings].size.must_equal 2
 		end
@@ -181,7 +181,7 @@ describe "Config Parser" do
 				@module_b.merge({ :active => true }),
 				@module_c.merge({ :active => true }),
 			]
-			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
 			h[:Mage_A][:dependencies].size.must_equal 2
 			h[:Mage_A][:warnings].size.must_equal 2
 		end
@@ -189,7 +189,7 @@ describe "Config Parser" do
 			parsed_module_definitions = [
 				{ :name => :a, :active => true, :defined => 'a', :warnings => ['first warning'] },
 			]
-			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
 			parsed_module_definitions[0][:active].must_equal false
 			parsed_module_definitions[0][:warnings].size.must_equal 2
 			parsed_module_definitions[0][:warnings][-1].must_include "invalid module name"
@@ -198,15 +198,15 @@ describe "Config Parser" do
 			parsed_module_definitions = [
 				@module_a.merge({ :active => true }),
 			]
-			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
 			h[:Mage_A][:config_path].must_equal 'app/code/core/Mage/A/etc/config.xml'
 			h[:Mage_A].wont_include :warnings
 		end
 		it "will deactivate modules without a config.xml and add a warning" do
 			parsed_module_definitions = [
-				{ :name => :Mage_E, :code_pool => :core, :active => true, :defined => 'e', :warnings => ['first warning'] },
+				{ :name => :Hello_World, :code_pool => :core, :active => true, :defined => 'hello', :warnings => ['first warning'] },
 			]
-			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
 			parsed_module_definitions[0][:active].must_equal false
 			parsed_module_definitions[0][:warnings].size.must_equal 2
 		end
@@ -217,7 +217,7 @@ describe "Config Parser" do
 				@module_c.merge({ :active => true, :dependencies => [:Mage_B, :Mage_A] }),
 				@module_d.merge({ :active => true, :dependencies => [:Mage_B] }),
 			]
-			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
 			a.map{|m| m[:name]}.must_equal [:Mage_B, :Mage_D, :Mage_A, :Mage_C]
 		end
 		it "will deactivate the first one, add a warning on the second one and use the second one to the Hash when 2 active modules have the same name" do
@@ -225,7 +225,7 @@ describe "Config Parser" do
 				@module_a.merge({ :active => true }),
 				@module_a.merge({ :active => true, :defined => 'b' }),
 			]
-			a,h = Maruto::ConfigParser.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
 			a.size.must_equal 1
 			h.size.must_equal 1
 			parsed_module_definitions[0][:active].must_equal false
