@@ -45,6 +45,18 @@ class Maruto::Runner < Thor
 
 	end
 
+	desc "warnings2", "list potential problems found in the config"
+	method_option :magento_root, :aliases => "-m", :default => "."
+	def warnings2()
+
+		magento_root = check_magento_folder()
+
+		warnings = Maruto::warnings magento_root
+		warnings.each do |w|
+			puts "#{w}"
+		end
+	end
+
 	desc "models", "list models sorted and grouped by their group_name"
 	method_option :magento_root, :aliases => "-m", :default => "."
 	def models()

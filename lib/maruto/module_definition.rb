@@ -77,7 +77,7 @@ module Maruto::ModuleDefinition
 						m[:config_path] = "app/code/#{m[:code_pool]}/#{parts[0]}/#{parts[1]}/etc/config.xml"
 						if !File.exists?(m[:config_path])
 							m[:warnings] ||= []
-							m[:warnings]<< "module:#{mod_name} defined_in:#{m[:defined]} - '#{m[:config_path]}' does not exists"
+							m[:warnings]<< "config.xml is missing (searching '#{m[:config_path]}' for #{m[:name]} defined in #{m[:defined]})"
 							m[:active] = false
 						end
 					end
