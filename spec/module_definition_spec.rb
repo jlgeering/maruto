@@ -75,14 +75,14 @@ describe Maruto::ModuleDefinition do
 		it "will treat any module that is <active>false</active> or <active>off</active> as inactive" do
 			Maruto::ModuleDefinition.parse_module_definition(Nokogiri::XML('''
 				<modname>
-						<active>false</active>
-						<codePool>core</codePool>
+					<active>false</active>
+					<codePool>core</codePool>
 				</modname>
 			''').root)[:active].must_equal false
 			Maruto::ModuleDefinition.parse_module_definition(Nokogiri::XML('''
 				<modname>
-						<active>off</active>
-						<codePool>core</codePool>
+					<active>off</active>
+					<codePool>core</codePool>
 				</modname>
 			''').root)[:active].must_equal false
 		end
@@ -90,8 +90,8 @@ describe Maruto::ModuleDefinition do
 		it "will warn when active is not in 'true', 'false' or 'off'" do
 			h = Maruto::ModuleDefinition.parse_module_definition(Nokogiri::XML('''
 				<modname>
-						<active>hello</active>
-						<codePool>core</codePool>
+					<active>hello</active>
+					<codePool>core</codePool>
 				</modname>
 			''').root)
 			h.must_include :active
@@ -105,8 +105,8 @@ describe Maruto::ModuleDefinition do
 		it "will warn when codePool is not in 'core', 'community' or 'local'" do
 			h = Maruto::ModuleDefinition.parse_module_definition(Nokogiri::XML('''
 				<modname>
-						<active>true</active>
-						<codePool>other</codePool>
+					<active>true</active>
+					<codePool>other</codePool>
 				</modname>
 			''').root)
 			h.must_include :warnings
