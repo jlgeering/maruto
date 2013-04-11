@@ -29,7 +29,10 @@ module Maruto::ModuleConfiguration
 		m
 	end
 
-	def self.parse_events_observers(base_path, xml_node)
+	def self.parse_scoped_events_observers(base_path, xml_node)
+
+		return [] if xml_node.nil?
+
 		events = []
 
 		xml_node.xpath('events/*').each do |e|
@@ -55,6 +58,16 @@ module Maruto::ModuleConfiguration
 		end
 
 		events
+	end
+
+	def self.parse_all_events_observers(base_path, xml_node)
+		# TODO handle multiple global / frontend / adminhtml nodes
+		h = {
+			:global    => parse_scoped_events_observers(base_path + '/global',    xml_node.at_xpath('global')),
+			:frontend  => parse_scoped_events_observers(base_path + '/frontend',  xml_node.at_xpath('frontend')),
+			:adminhtml => parse_scoped_events_observers(base_path + '/adminhtml', xml_node.at_xpath('adminhtml')),
+		}
+		h.select {|k,v| v.size > 0}
 	end
 
 end
