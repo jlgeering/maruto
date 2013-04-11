@@ -30,4 +30,9 @@ module Maruto::ModuleConfiguration
 		m
 	end
 
+	def self.read_events_observers(xml_node)
+		warnings = []
+		events = {}
+		[events, warnings]
+	end
 end
