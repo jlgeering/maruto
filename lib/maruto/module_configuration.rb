@@ -3,6 +3,14 @@ require 'nokogiri'
 
 module Maruto::ModuleConfiguration
 
+	def self.load(m)
+		f = File.open(m[:config_path])
+		doc = Nokogiri::XML(f) { |config| config.strict }
+		f.close
+
+		read_module_version(m, doc.root)
+	end
+
 	def self.read_module_version(m, xml_node)
 		if xml_node.nil?
 			m[:warnings] ||= []
