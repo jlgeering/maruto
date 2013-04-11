@@ -66,51 +66,72 @@ module Maruto
 			end
 			describe "and reading events observers" do
 				before do
-					@xml_node_1 = Nokogiri::XML('''
+					@xml_node = Nokogiri::XML('''
 						<events>
 							<first_event>
 								<observers>
 									<first_observer>
-										<type>singleton</type>
-										<class>Mage_A_Model_Observer</class>
-										<method>methodName</method>
-									</first_observer>
-								</observers>
-							</first_event>
-						</events>
-					''').root.at_xpath('/events')
-					@xml_node_2 = Nokogiri::XML('''
-						<events>
-							<first_event>
-								<observers>
-									<first_observer>
-										<type>singleton</type>
-										<class>Mage_A_Model_Observer</class>
-										<method>methodName</method>
+										<type>model</type>                    <!-- model, object or singleton -->
+										<class>Mage_A_Model_Observer</class>  <!-- observers class or class alias -->
+										<method>methodName</method>           <!-- observer\'s method to be called -->
+										<args></args>                         <!-- additional arguments passed to observer -->
 									</first_observer>
 								</observers>
 							</first_event>
 							<second_event>
 								<observers>
 									<second_observer>
-										<type>singleton</type>
-										<class>Mage_A_Model_Observer</class>
-										<method>methodName</method>
+										<type>object</type>
+										<class>Mage_B_Model_Observer</class>
+										<method>doSomething</method>
 									</second_observer>
 									<third_observer>
 										<type>singleton</type>
-										<class>Mage_A_Model_Observer</class>
-										<method>methodName</method>
+										<class>Mage_C_Model_Observer</class>
+										<method>helloWorld</method>
 									</third_observer>
 								</observers>
 							</second_event>
 						</events>
-					''').root.at_xpath('/events')
+					''').root.at_xpath('/')
 				end
-				it "will return a hash and an array" do
-					e,w = ModuleConfiguration.read_events_observers(@xml_node_1)
-					e.must_be_kind_of Hash
-					w.must_be_kind_of Array
+				it "will return a array of events" do
+					e = ModuleConfiguration.parse_events_observers('', @xml_node)
+					e.must_be_kind_of Array
+					e.size.must_equal 2
+				end
+				it "will handle a missing <events> element" do
+					node = Nokogiri::XML('''
+						<hello></hello>
+					''').root.at_xpath('/')
+					e = ModuleConfiguration.parse_events_observers('', node)
+					e.must_be_kind_of Array
+					e.size.must_equal 0
+				end
+				it "will build the path to an event" do
+					e = ModuleConfiguration.parse_events_observers('root', @xml_node)
+					e[0][:path].must_equal 'root/events/first_event'
+				end
+				it "will read the name type class and method of an observer" do
+					e = ModuleConfiguration.parse_events_observers('', @xml_node)
+					e[0][:observers][0][:name].must_equal 'first_observer'
+					e[0][:observers][0][:type].must_equal 'model'
+					e[0][:observers][0][:class].must_equal 'Mage_A_Model_Observer'
+					e[0][:observers][0][:method].must_equal 'methodName'
+				end
+				it "will build the path to an event observer" do
+					e = ModuleConfiguration.parse_events_observers('root', @xml_node)
+					e[0][:observers][0][:path].must_equal 'root/events/first_event/observers/first_observer'
+				end
+				it "will group observers by events" do
+					e = ModuleConfiguration.parse_events_observers('', @xml_node)
+					e.size.must_equal 2
+					e[0].must_include :name
+					e[0].must_include :observers
+					e[0][:name].must_equal 'first_event'
+					e[0][:observers].size.must_equal 1
+					e[1][:name].must_equal 'second_event'
+					e[1][:observers].size.must_equal 2
 				end
 			end
 		end

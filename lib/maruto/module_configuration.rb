@@ -4,7 +4,6 @@ require 'nokogiri'
 module Maruto::ModuleConfiguration
 
 	def self.read_module_version(m, xml_node)
-
 		if xml_node.nil?
 			m[:warnings] ||= []
 			m[:warnings] << "module:#{m[:name]} - config.xml is missing a <modules></modules> node (in '#{m[:config_path]}')"
@@ -30,9 +29,32 @@ module Maruto::ModuleConfiguration
 		m
 	end
 
-	def self.read_events_observers(xml_node)
-		warnings = []
-		events = {}
-		[events, warnings]
+	def self.parse_events_observers(base_path, xml_node)
+		events = []
+
+		xml_node.xpath('events/*').each do |e|
+			event = {
+				:name => e.name,
+				:path => base_path + '/events/' + e.name,
+				:observers => [],
+			}
+
+			e.xpath('observers/*').each do |o|
+				observer = {
+					:name => o.name,
+					:path => event[:path] + '/observers/' + o.name,
+				}
+				observer[:type]   = o.at_xpath('type').content
+				observer[:class]  = o.at_xpath('class').content
+				observer[:method] = o.at_xpath('method').content
+
+				event[:observers] << observer
+			end
+
+			events << event
+		end
+
+		events
 	end
+
 end
