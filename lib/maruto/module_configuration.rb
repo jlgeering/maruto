@@ -75,7 +75,7 @@ module Maruto::ModuleConfiguration
 			:frontend  => parse_scoped_events_observers(base_path + '/frontend',  xml_node.at_xpath('frontend')),
 			:adminhtml => parse_scoped_events_observers(base_path + '/adminhtml', xml_node.at_xpath('adminhtml')),
 		}
-		h.select {|k,v| v.size > 0}
+		h.delete_if {|k,v| v.size == 0}
 	end
 
 end
