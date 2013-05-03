@@ -43,6 +43,13 @@ class Maruto::Runner < Thor
 		magento_config = Maruto::MagentoConfig.new magento_root
 		magento_config.print_warnings
 
+		# next gen maruto:
+
+		warnings = Maruto::warnings magento_root
+		warnings.each do |w|
+			puts "#{w}"
+		end
+
 	end
 
 	desc "models", "list models sorted and grouped by their group_name"
