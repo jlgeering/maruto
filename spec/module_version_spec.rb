@@ -38,14 +38,14 @@ module Maruto
 					w = @module_a.merge({ :warnings => ['first warning'] })
 					m = ModuleConfiguration.read_module_version(w, Nokogiri::XML('<config><a></a></config>').root)
 					m[:warnings].size.must_equal 2
-					m[:warnings][-1].must_include '<modules'
+					m[:warnings][-1][:message].must_include '<modules'
 				end
 				it "will add a warning when then node with the module's name is missing" do
 					w = @module_a.merge({ :warnings => ['first warning'] })
 					m = ModuleConfiguration.read_module_version(w, Nokogiri::XML('<config><modules></modules></config>').root)
 					m[:warnings].size.must_equal 2
-					m[:warnings][-1].must_include '<modules'
-					m[:warnings][-1].must_include '<Mage_A'
+					m[:warnings][-1][:message].must_include '<modules'
+					m[:warnings][-1][:message].must_include '<Mage_A'
 				end
 				it "will add a warning when there is a node from a different module" do
 					xml_config_root = Nokogiri::XML('''
@@ -61,7 +61,7 @@ module Maruto
 					w = @module_a.merge({ :warnings => ['first warning'] })
 					m = ModuleConfiguration.read_module_version(w, xml_config_root)
 					m[:warnings].size.must_equal 2
-					m[:warnings][-1].must_include 'Mage_B'
+					m[:warnings][-1][:message].must_include 'Mage_B'
 				end
 			end
 		end

@@ -62,19 +62,19 @@ module Maruto::ModuleDefinition
 					# disable first module
 					h[mod_name][:active] = false
 					m[:warnings] ||= []
-					m[:warnings] << "defined_in:#{m[:defined]} - duplicate module definition (in '#{h[mod_name][:defined]}' and '#{m[:defined]}')"
+					m[:warnings] << { :message => "defined_in:#{m[:defined]} - duplicate module definition (in '#{h[mod_name][:defined]}' and '#{m[:defined]}')" }
 				end
 				parts = mod_name.to_s.split('_')
 				h[mod_name] = m
 				if parts.size != 2
 					m[:warnings] ||= []
-					m[:warnings] << "defined_in:#{m[:defined]} - invalid module name" unless parts.size == 2
+					m[:warnings] << { :message => "defined_in:#{m[:defined]} - invalid module name" }
 					m[:active] = false
 				else
 					m[:config_path] = "app/code/#{m[:code_pool]}/#{parts[0]}/#{parts[1]}/etc/config.xml"
 					if !File.exists?(m[:config_path])
 						m[:warnings] ||= []
-						m[:warnings]<< "config.xml is missing (searching '#{m[:config_path]}' for #{m[:name]} defined in #{m[:defined]})"
+						m[:warnings]<< { :message => "config.xml is missing (searching '#{m[:config_path]}' for #{m[:name]} defined in #{m[:defined]})" }
 						m[:active] = false
 					end
 				end
@@ -92,12 +92,12 @@ module Maruto::ModuleDefinition
 			m[:dependencies] = dependencies.keys
 			if duplicates.size > 0
 				m[:warnings] ||= []
-				m[:warnings] << "duplicate dependencies (#{duplicates.join(', ')}) in '#{m[:defined]}'"
+				m[:warnings] << { :message => "duplicate dependencies (#{duplicates.join(', ')}) in '#{m[:defined]}'" }
 			end
 			m[:dependencies].delete_if do |d|
 				unless h.include? d
 					m[:warnings] ||= []
-					m[:warnings] << "missing dependency: '#{d}' in '#{m[:defined]}'"
+					m[:warnings] << { :message => "missing dependency: '#{d}' in '#{m[:defined]}'" }
 					true
 				end
 			end

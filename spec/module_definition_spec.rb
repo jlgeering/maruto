@@ -189,7 +189,7 @@ describe Maruto::ModuleDefinition do
 			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			parsed_module_definitions[0][:active].must_equal false
 			parsed_module_definitions[0][:warnings].size.must_equal 2
-			parsed_module_definitions[0][:warnings][-1].must_include "invalid module name"
+			parsed_module_definitions[0][:warnings][-1][:message].must_include "invalid module name"
 		end
 		it "will add the path to the module's config.xml" do
 			parsed_module_definitions = [
