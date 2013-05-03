@@ -52,9 +52,12 @@ class Maruto::Runner < Thor
 
 		# next gen maruto:
 
-		warnings = Maruto::warnings magento_root
-		warnings.each do |w|
-			puts "#{w}"
+		all_warnings = Maruto::warnings magento_root
+		all_warnings.group_by { |e| e[:module] }.each do |m,module_warnings|
+			puts "[module:#{m}]"
+			module_warnings.each do |w|
+				puts "   [file:#{w[:file]}] #{w[:message]}"
+			end
 		end
 
 	end
