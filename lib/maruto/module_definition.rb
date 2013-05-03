@@ -87,7 +87,7 @@ module Maruto::ModuleDefinition
 			# group by module name: hash of module_name => [module_name]
 			dependencies = m[:dependencies].group_by{ |e| e }
 			# find duplicates
-			duplicates       = dependencies.select{ |k, v| v.size > 1 }.keys
+			duplicates       = Hash[dependencies.select{ |k, v| v.size > 1 }].keys  # in ruby 1.8.7 select returns an array of tuples
 			# unique values
 			m[:dependencies] = dependencies.keys
 			if duplicates.size > 0
