@@ -84,11 +84,15 @@ module Maruto::ModuleDefinition
 		h.reject!{|n,m| !m[:active]}
 		# check dependencies
 		h.reject{|n,m| !m.include? :dependencies}.each do |mod_name, m|
-			# remove duplicates
-			duplicates = m[:dependencies].uniq!
-			if duplicates
+			# group by module name: hash of module_name => [module_name]
+			dependencies = m[:dependencies].group_by{ |e| e }
+			# find duplicates
+			duplicates       = dependencies.select{ |k, v| v.size > 1 }.keys
+			# unique values
+			m[:dependencies] = dependencies.keys
+			if duplicates.size > 0
 				m[:warnings] ||= []
-				m[:warnings] << "duplicate dependencies (#{duplicates}) in '#{m[:defined]}'"
+				m[:warnings] << "duplicate dependencies (#{duplicates.join(', ')}) in '#{m[:defined]}'"
 			end
 			m[:dependencies].each do |d|
 				unless h.include? d
