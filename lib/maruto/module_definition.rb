@@ -33,10 +33,8 @@ module Maruto::ModuleDefinition
 		doc.xpath('//modules/*').map { |xml_node| self.parse_module_definition(xml_node).merge({:defined => path}) }
 	end
 
-	def self.parse_all_module_definitions(magento_root)
-		Dir.chdir(magento_root) do
-			Dir.glob('app/etc/modules/*.xml').reduce([]) { |result, path| result + self.parse_module_definition_file(path) }
-		end
+	def self.parse_all_module_definitions()
+		Dir.glob('app/etc/modules/*.xml').reduce([]) { |result, path| result + self.parse_module_definition_file(path) }
 	end
 
 	class ModuleSorter
@@ -55,31 +53,29 @@ module Maruto::ModuleDefinition
 		end
 	end
 
-	def self.analyse_module_definitions(magento_root, module_definitions)
+	def self.analyse_module_definitions(module_definitions)
 		h = Hash.new
-		Dir.chdir(magento_root) do
-			module_definitions.each do |m|
-				if m[:active]
-					mod_name = m[:name]
-					if h.include? mod_name then
-						# disable first module
-						h[mod_name][:active] = false
+		module_definitions.each do |m|
+			if m[:active]
+				mod_name = m[:name]
+				if h.include? mod_name then
+					# disable first module
+					h[mod_name][:active] = false
+					m[:warnings] ||= []
+					m[:warnings] << "module:#{mod_name} defined_in:#{m[:defined]} - duplicate module definition (in '#{h[mod_name][:defined]}' and '#{m[:defined]}')"
+				end
+				parts = mod_name.to_s.split('_')
+				h[mod_name] = m
+				if parts.size != 2
+					m[:warnings] ||= []
+					m[:warnings] << "module:#{mod_name} defined_in:#{m[:defined]} - invalid module name" unless parts.size == 2
+					m[:active] = false
+				else
+					m[:config_path] = "app/code/#{m[:code_pool]}/#{parts[0]}/#{parts[1]}/etc/config.xml"
+					if !File.exists?(m[:config_path])
 						m[:warnings] ||= []
-						m[:warnings] << "module:#{mod_name} defined_in:#{m[:defined]} - duplicate module definition (in '#{h[mod_name][:defined]}' and '#{m[:defined]}')"
-					end
-					parts = mod_name.to_s.split('_')
-					h[mod_name] = m
-					if parts.size != 2
-						m[:warnings] ||= []
-						m[:warnings] << "module:#{mod_name} defined_in:#{m[:defined]} - invalid module name" unless parts.size == 2
+						m[:warnings]<< "config.xml is missing (searching '#{m[:config_path]}' for #{m[:name]} defined in #{m[:defined]})"
 						m[:active] = false
-					else
-						m[:config_path] = "app/code/#{m[:code_pool]}/#{parts[0]}/#{parts[1]}/etc/config.xml"
-						if !File.exists?(m[:config_path])
-							m[:warnings] ||= []
-							m[:warnings]<< "config.xml is missing (searching '#{m[:config_path]}' for #{m[:name]} defined in #{m[:defined]})"
-							m[:active] = false
-						end
 					end
 				end
 			end

@@ -41,7 +41,8 @@ describe Maruto::ModuleDefinition do
 			</Mage_Eav>
 		''').root
 
-		@magento_root = File.expand_path('../../fixtures/magento_root', __FILE__)
+		magento_root = File.expand_path('../../fixtures/magento_root', __FILE__)
+		Dir.chdir(magento_root)
 	end
 
 	describe "when parsing a module definition" do
@@ -115,29 +116,25 @@ describe Maruto::ModuleDefinition do
 
 	describe "when parsing a module definition file" do
 		it "will return an Array of module definitions" do
-			Dir.chdir(@magento_root) do
-				a = Maruto::ModuleDefinition.parse_module_definition_file('app/etc/modules/Mage_Api.xml')
-				a.must_be_kind_of Array
-				a.size.must_equal 1
-				a[0].must_include :name
-				a[0][:name].must_equal :Mage_Api
-			end
+			a = Maruto::ModuleDefinition.parse_module_definition_file('app/etc/modules/Mage_Api.xml')
+			a.must_be_kind_of Array
+			a.size.must_equal 1
+			a[0].must_include :name
+			a[0][:name].must_equal :Mage_Api
 		end
 		it "will include the relative path to the file to the module definition" do
-			Dir.chdir(@magento_root) do
-				file = 'app/etc/modules/Mage_All.xml'
-				a = Maruto::ModuleDefinition.parse_module_definition_file(file)
-				a.size.must_be :>, 0
-				a.each do |m|
-					m.must_include :defined
-					m[:defined].must_equal file
-				end
+			file = 'app/etc/modules/Mage_All.xml'
+			a = Maruto::ModuleDefinition.parse_module_definition_file(file)
+			a.size.must_be :>, 0
+			a.each do |m|
+				m.must_include :defined
+				m[:defined].must_equal file
 			end
 		end
 	end
 
 	it "will parse all module definition files in app/etc/modules" do
-		a = Maruto::ModuleDefinition.parse_all_module_definitions(@magento_root)
+		a = Maruto::ModuleDefinition.parse_all_module_definitions()
 		a.must_be_kind_of Array
 		a.size.must_be :>, 0
 		a.each do |m|
@@ -153,7 +150,7 @@ describe Maruto::ModuleDefinition do
 			@module_d = { :name => :Mage_D, :code_pool => :core, :defined => 'd'}
 		end
 		it "will return an Array and a Hash" do
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, [])
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions([])
 			a.must_be_kind_of Array
 			h.must_be_kind_of Hash
 		end
@@ -161,7 +158,7 @@ describe Maruto::ModuleDefinition do
 			parsed_module_definitions = [
 				@module_a.merge({ :active => false}),
 			]
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			a.size.must_equal 0
 			h.size.must_equal 0
 		end
@@ -171,7 +168,7 @@ describe Maruto::ModuleDefinition do
 				@module_b.merge({ :active => true }),
 				@module_c.merge({ :active => false }),
 			]
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			h[:Mage_A][:dependencies].size.must_equal 1
 			h[:Mage_A][:warnings].size.must_equal 2
 		end
@@ -181,7 +178,7 @@ describe Maruto::ModuleDefinition do
 				@module_b.merge({ :active => true }),
 				@module_c.merge({ :active => true }),
 			]
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			h[:Mage_A][:dependencies].size.must_equal 2
 			h[:Mage_A][:warnings].size.must_equal 2
 		end
@@ -189,7 +186,7 @@ describe Maruto::ModuleDefinition do
 			parsed_module_definitions = [
 				{ :name => :a, :active => true, :defined => 'a', :warnings => ['first warning'] },
 			]
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			parsed_module_definitions[0][:active].must_equal false
 			parsed_module_definitions[0][:warnings].size.must_equal 2
 			parsed_module_definitions[0][:warnings][-1].must_include "invalid module name"
@@ -198,7 +195,7 @@ describe Maruto::ModuleDefinition do
 			parsed_module_definitions = [
 				@module_a.merge({ :active => true }),
 			]
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			h[:Mage_A][:config_path].must_equal 'app/code/core/Mage/A/etc/config.xml'
 			h[:Mage_A].wont_include :warnings
 		end
@@ -206,7 +203,7 @@ describe Maruto::ModuleDefinition do
 			parsed_module_definitions = [
 				{ :name => :Hello_World, :code_pool => :core, :active => true, :defined => 'hello', :warnings => ['first warning'] },
 			]
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			parsed_module_definitions[0][:active].must_equal false
 			parsed_module_definitions[0][:warnings].size.must_equal 2
 		end
@@ -217,7 +214,7 @@ describe Maruto::ModuleDefinition do
 				@module_c.merge({ :active => true, :dependencies => [:Mage_B, :Mage_A] }),
 				@module_d.merge({ :active => true, :dependencies => [:Mage_B] }),
 			]
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			a.map{|m| m[:name]}.must_equal [:Mage_B, :Mage_D, :Mage_A, :Mage_C]
 		end
 		it "will deactivate the first one, add a warning on the second one and use the second one to the Hash when 2 active modules have the same name" do
@@ -225,7 +222,7 @@ describe Maruto::ModuleDefinition do
 				@module_a.merge({ :active => true }),
 				@module_a.merge({ :active => true, :defined => 'b' }),
 			]
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(@magento_root, parsed_module_definitions)
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			a.size.must_equal 1
 			h.size.must_equal 1
 			parsed_module_definitions[0][:active].must_equal false
