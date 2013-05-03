@@ -97,6 +97,8 @@ describe Maruto::ModuleDefinition do
 			''').root)
 			h.must_include :active
 			h.must_include :warnings
+			h[:warnings].size.must_equal 1
+			h[:warnings][0].must_include :message
 			# any string that is not false or off => active
 			# TODO empty string => inactive (check in php)
 			h[:active].must_equal true
@@ -111,6 +113,8 @@ describe Maruto::ModuleDefinition do
 				</modname>
 			''').root)
 			h.must_include :warnings
+			h[:warnings].size.must_equal 1
+			h[:warnings][0].must_include :message
 		end
 	end
 
@@ -121,6 +125,25 @@ describe Maruto::ModuleDefinition do
 			a.size.must_equal 1
 			a[0].must_include :name
 			a[0][:name].must_equal :Mage_Api
+		end
+		it "will return an Array of module definitions" do
+			a = Maruto::ModuleDefinition.parse_module_definition_file('app/etc/modules/Mage_Api.xml')
+			a.must_be_kind_of Array
+			a.size.must_equal 1
+			a[0].must_include :name
+			a[0][:name].must_equal :Mage_Api
+		end
+		it "will add the definition file path to all warnings" do
+			file = 'app/etc/modules/Bad_Example.xml'
+			a = Maruto::ModuleDefinition.parse_module_definition_file(file)
+			a.must_be_kind_of Array
+			a.size.must_equal 1
+			a[0].must_include :warnings
+			a[0][:warnings].size.wont_equal 0
+			a[0][:warnings].each do |w|
+				w.must_include :file
+				w[:file].must_equal file
+			end
 		end
 		it "will include the relative path to the file to the module definition" do
 			file = 'app/etc/modules/Mage_All.xml'
@@ -171,6 +194,7 @@ describe Maruto::ModuleDefinition do
 			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			h[:Mage_A][:dependencies].size.must_equal 1
 			h[:Mage_A][:warnings].size.must_equal 2
+			h[:Mage_A][:warnings][-1][:file].must_equal @module_a[:defined]
 		end
 		it "will remove duplicate dependencies and add a warning" do
 			parsed_module_definitions = [
@@ -181,6 +205,7 @@ describe Maruto::ModuleDefinition do
 			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			h[:Mage_A][:dependencies].size.must_equal 2
 			h[:Mage_A][:warnings].size.must_equal 2
+			h[:Mage_A][:warnings][-1][:file].must_equal @module_a[:defined]
 		end
 		it "will deactivate modules with an invalid name and add a warning" do
 			parsed_module_definitions = [
@@ -190,6 +215,7 @@ describe Maruto::ModuleDefinition do
 			parsed_module_definitions[0][:active].must_equal false
 			parsed_module_definitions[0][:warnings].size.must_equal 2
 			parsed_module_definitions[0][:warnings][-1][:message].must_include "invalid module name"
+			parsed_module_definitions[0][:warnings][-1][:file].must_equal 'a'
 		end
 		it "will add the path to the module's config.xml" do
 			parsed_module_definitions = [
@@ -206,6 +232,7 @@ describe Maruto::ModuleDefinition do
 			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			parsed_module_definitions[0][:active].must_equal false
 			parsed_module_definitions[0][:warnings].size.must_equal 2
+			parsed_module_definitions[0][:warnings][-1][:file].must_equal 'hello'
 		end
 		it "will sort the Array according to module dependencies" do
 			parsed_module_definitions = [
@@ -229,6 +256,7 @@ describe Maruto::ModuleDefinition do
 			a[0][:active].must_equal true
 			a[0][:defined].must_equal 'b'
 			a[0].must_include :warnings
+			a[0][:warnings][0][:file].must_equal 'b'
 		end
 	end
 
