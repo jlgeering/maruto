@@ -94,11 +94,11 @@ module Maruto::ModuleDefinition
 				m[:warnings] ||= []
 				m[:warnings] << "duplicate dependencies (#{duplicates.join(', ')}) in '#{m[:defined]}'"
 			end
-			m[:dependencies].each do |d|
+			m[:dependencies].delete_if do |d|
 				unless h.include? d
-					m[:dependencies].delete d
 					m[:warnings] ||= []
 					m[:warnings] << "missing dependency: '#{d}' in '#{m[:defined]}'"
+					true
 				end
 			end
 		end
