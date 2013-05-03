@@ -13,9 +13,10 @@ module Maruto::MagentoInstance
 				# ModuleConfiguration.analyse(m, active_modules)
 			end
 
+			# TODO move to function: collect_warnings + write spec
 			warnings = []
 			all_modules.each do |m|
-				warnings.concat m[:warnings].map{|w| "[module:#{m[:name]}] #{w}"} if m.include? :warnings
+				warnings.concat m[:warnings].map{|w| w.merge(:module => m[:name]) } if m.include? :warnings
 			end
 
 			{

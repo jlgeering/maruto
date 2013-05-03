@@ -6,6 +6,13 @@ require 'thor'
 class Maruto::Runner < Thor
 	include Thor::Actions
 
+	map "-v" => :version, "--version" => :version
+
+	desc "version", "Show Maruto version"
+	def version
+		say "Maruto #{Maruto::VERSION}"
+	end
+
 	desc "magento?", "check if MAGENTO_ROOT contains a magento app"
 	method_option :magento_root, :aliases => "-m", :default => "."
 	def magento?()
@@ -45,9 +52,12 @@ class Maruto::Runner < Thor
 
 		# next gen maruto:
 
-		warnings = Maruto::warnings magento_root
-		warnings.each do |w|
-			puts "#{w}"
+		all_warnings = Maruto::warnings magento_root
+		all_warnings.group_by { |e| e[:module] }.each do |m,module_warnings|
+			puts "[module:#{m}]"
+			module_warnings.each do |w|
+				puts "   [file:#{w[:file]}] #{w[:message]}"
+			end
 		end
 
 	end
@@ -91,10 +101,10 @@ class Maruto::Runner < Thor
 			raise Thor::Error, "not a folder: #{magento_root}" unless magento_root.directory?
 
 			is_magento = (magento_root + 'app').directory? &&
-			             (magento_root + 'app/code').directory? &&
-			             (magento_root + 'app/etc').directory? &&
-			             (magento_root + 'app/etc/modules').directory? &&
-			             (magento_root + 'app/etc/local.xml').file?
+									 (magento_root + 'app/code').directory? &&
+									 (magento_root + 'app/etc').directory? &&
+									 (magento_root + 'app/etc/modules').directory? &&
+									 (magento_root + 'app/etc/local.xml').file?
 			raise Thor::Error, "could not find magento in this folder: #{magento_root.realpath}#{options[:magento_root] == '.' ? ' (try -m MAGENTO_ROOT)' : ''}" unless is_magento
 
 			return magento_root

@@ -15,19 +15,19 @@ module Maruto::ModuleConfiguration
 		xml_node = xml_root.at_xpath('/config/modules')
 		if xml_node.nil?
 			m[:warnings] ||= []
-			m[:warnings] << "config.xml is missing a <modules></modules> node (in '#{m[:config_path]}')"
+			m[:warnings] << { :file => m[:config_path], :message => "config.xml is missing a /config/modules node" }
 			return m
 		end
 
 		unless xml_node.at_xpath("./#{m[:name]}")
 			m[:warnings] ||= []
-			m[:warnings] << "config.xml is missing a <modules><#{m[:name]}></#{m[:name]}></modules> node (in '#{m[:config_path]}')"
+			m[:warnings] << { :file => m[:config_path], :message => "config.xml is missing a /config/modules/#{m[:name]} node" }
 		end
 
 		xml_node.xpath("./*").each do |n|
 			unless n.name.to_sym == m[:name]
 				m[:warnings] ||= []
-				m[:warnings] << "config.xml contains configuration for a different module (<modules><#{n.name}></#{n.name}></modules> in '#{m[:config_path]}')"
+				m[:warnings] << { :file => m[:config_path], :message => "config.xml contains configuration for a different module (/config/modules/#{n.name})" }
 			end
 		end
 
