@@ -11,7 +11,8 @@ module Maruto::ModuleConfiguration
 		read_module_version(m, doc.root)
 	end
 
-	def self.read_module_version(m, xml_node)
+	def self.read_module_version(m, xml_root)
+		xml_node = xml_root.at_xpath('/config/modules')
 		if xml_node.nil?
 			m[:warnings] ||= []
 			m[:warnings] << "module:#{m[:name]} - config.xml is missing a <modules></modules> node (in '#{m[:config_path]}')"
