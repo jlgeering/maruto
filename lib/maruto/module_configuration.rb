@@ -9,6 +9,7 @@ module Maruto::ModuleConfiguration
 		f.close
 
 		read_module_version(m, doc.root)
+		read_module_version(m, doc.root)
 	end
 
 	def self.read_module_version(m, xml_root)
@@ -40,9 +41,14 @@ module Maruto::ModuleConfiguration
 
 	def self.parse_scoped_events_observers(base_path, xml_node)
 
-		return [] if xml_node.nil?
+		return [],[] if xml_node.nil?
 
-		events = []
+		events   = []
+		warnings = []
+
+		if xml_node.size > 1
+			warnings << "duplicate element in config.xml (#{base_path})"
+		end
 
 		xml_node.xpath('events/*').each do |e|
 			event = {
@@ -66,17 +72,17 @@ module Maruto::ModuleConfiguration
 			events << event
 		end
 
-		events
+		return events, warnings
 	end
 
-	def self.parse_all_events_observers(base_path, xml_node)
-		# TODO handle multiple global / frontend / adminhtml nodes
-		h = {
-			:global    => parse_scoped_events_observers(base_path + '/global',    xml_node.at_xpath('global')),
-			:frontend  => parse_scoped_events_observers(base_path + '/frontend',  xml_node.at_xpath('frontend')),
-			:adminhtml => parse_scoped_events_observers(base_path + '/adminhtml', xml_node.at_xpath('adminhtml')),
-		}
-		h.delete_if {|k,v| v.size == 0}
+	def self.parse_all_events_observers(xml_node)
+		scopes = [:global, :frontend, :adminhtml]
+		events = {}
+		scopes.each do |scope|
+			e,w = parse_scoped_events_observers("/config/#{scope}",    xml_node.xpath("/config/#{scope}"))
+			events[scope] = e if e.size > 0
+		end
+		events
 	end
 
 end
