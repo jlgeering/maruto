@@ -3,24 +3,20 @@ require 'nokogiri'
 
 module Maruto::ModuleConfiguration
 
-	def self.load(m)
-		parse_module_configuration(m)
-	end
-
 	def self.parse_module_configuration(m)
 		f = File.open(m[:config_path])
 		xml_root = Nokogiri::XML(f) { |config| config.strict }.root
 		f.close
 
 		version_warnings = parse_module_version(m, xml_root)
-		# events, event_warnings = parse_all_events_observers(xml_root)
+		event_warnings   = parse_all_events_observers(m, xml_root)
 
-		# config_warnings = version_warnings + event_warnings
+		config_warnings = version_warnings + event_warnings
 
-		# all_module_warnings = m[:warnings] || []
-		# all_module_warnings.concat(config_warnings.map { |msg| { :file => m[:config_path], :message => msg } })
+		all_module_warnings = m[:warnings] || []
+		all_module_warnings.concat(config_warnings.map { |msg| { :file => m[:config_path], :message => msg } })
 
-		# m[:warnings] = all_module_warnings unless all_module_warnings.size == 0
+		m[:warnings] = all_module_warnings unless all_module_warnings.size == 0
 
 		m
 	end
@@ -100,16 +96,18 @@ module Maruto::ModuleConfiguration
 		return events, warnings
 	end
 
-	def self.parse_all_events_observers(xml_node)
+	def self.parse_all_events_observers(m, xml_node)
 		scopes = [:global, :frontend, :adminhtml]
 		events = {}
 		warnings = []
 		scopes.each do |scope|
 			e, w = parse_scoped_events_observers("/config/#{scope}",    xml_node.xpath("/config/#{scope}"))
+
 			events[scope] = e if e.size > 0
 			warnings.concat w
 		end
-		return events, warnings
+		m[:events] = events if events.keys.size > 0
+		return warnings
 	end
 
 	def self.analyse_module_configuration()

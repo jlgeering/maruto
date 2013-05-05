@@ -9,7 +9,7 @@ module Maruto::MagentoInstance
 			sorted_modules, active_modules = Maruto::ModuleDefinition.analyse_module_definitions(all_modules)
 
 			sorted_modules.each do |m|
-				Maruto::ModuleConfiguration.load(m)
+				Maruto::ModuleConfiguration.parse_module_configuration(m)
 				# ModuleConfiguration.analyse(m, active_modules)
 			end
 
