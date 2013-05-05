@@ -84,6 +84,34 @@ module Maruto
 				events[1][:name].must_equal 'second_event'
 				events[1][:observers].size.must_equal 2
 			end
+			it "will skip observers with an invalid type and add a warning" do
+				@xml_node = Nokogiri::XML('''
+					<events>
+						<first_event>
+							<observers>
+								<invalid_observer>
+									<type>something</type>
+									<class>Mage_C_Model_Observer</class>
+									<method>helloWorld</method>
+								</invalid_observer>
+							</observers>
+						</first_event>
+					</events>
+				''').root.xpath('/')
+				events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', @xml_node)
+				events.size.must_equal 1
+				events[0][:observers].size.must_equal 0
+
+				warnings.size.must_equal 1
+				warnings[0].must_include 'root/events/first_event/observers/invalid_observer/type'
+				warnings[0].must_include 'model'
+				warnings[0].must_include 'object'
+				warnings[0].must_include 'singleton'
+				warnings[0].must_include 'something'
+			end
+			# it "will warn if an observers class is invalid" do
+			# 	# TODO
+			# end
 			it "will handle duplicate scopes and add a warning" do
 				node = Nokogiri::XML('''<config>
 					<scope>
@@ -104,29 +132,22 @@ module Maruto
 			end
 
 			# it "will warn when an event has no observers" do
-			# 	@xml_node_no_obs = Nokogiri::XML('''
-			# 		<events><first_event></first_event></events>
-			# 	''').root.at_xpath('/events')
-			# 	e = ModuleConfiguration.parse_events_observers(@xml_node_no_obs)
-			# 	e.size.must_equal 1
-			# 	e[0].must_include :warnings
-			# 	e[0][:warnings].size.must_equal 1
+			# 	xml_node_no_obs = Nokogiri::XML('''
+			# 		<config><scope><events><first_event></first_event></events></scope></config>
+			# 	''').root
+			# 	events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', xml_node_no_obs.xpath('/config/scope'))
+			# 	events.size.must_equal 0
+			# 	warnings.size.must_equal 1
+			# 	warnings[0].must_include 'root/events/first_event'
 			# end
 			# it "will warn when an event has an empty observers node" do
-			# 	@xml_node_empty_obs = Nokogiri::XML('''
-			# 		<events><first_event><observers></observers></first_event></events>
-			# 	''').root.at_xpath('/events')
-			# 	e = ModuleConfiguration.parse_events_observers(@xml_node_empty_obs)
-			# 	e.size.must_equal 1
-			# 	e[0][:warnings].size.must_equal 1
-			# end
-			# it "will warn if an observers type is invalid" do
-			# 	e = ModuleConfiguration.parse_events_observers(@xml_node)
-			# 	e[1][:warnings].size.must_equal 1
-			# 	e[1][:warnings][0].must_include '<type>something</type>'
-			# end
-			# it "will warn if an observers class is invalid" do
-			# 	# TODO
+			# 	xml_node_empty_obs = Nokogiri::XML('''
+			# 		<config><scope><events><first_event><observers></observers></first_event></events></scope></config>
+			# 	''').root
+			# 	events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', xml_node_empty_obs.xpath('/config/scope'))
+			# 	events.size.must_equal 0
+			# 	warnings.size.must_equal 1
+			# 	warnings[0].must_include 'root/events/first_event/observers'
 			# end
 
 			it "will group events by scope and build the correct path" do

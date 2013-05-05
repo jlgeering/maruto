@@ -66,7 +66,11 @@ module Maruto::ModuleConfiguration
 				observer[:class]  = o.at_xpath('class').content
 				observer[:method] = o.at_xpath('method').content
 
-				event[:observers] << observer
+				if /^(model|object|singleton)$/ !~ observer[:type]
+					warnings << "#{observer[:path]}/type should be 'model', 'object', or 'singleton', but was '#{observer[:type]}'"
+				else
+					event[:observers] << observer
+				end
 			end
 
 			events << event
