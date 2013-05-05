@@ -4,38 +4,49 @@ require 'nokogiri'
 module Maruto::ModuleConfiguration
 
 	def self.load(m)
-		f = File.open(m[:config_path])
-		doc = Nokogiri::XML(f) { |config| config.strict }
-		f.close
-
-		read_module_version(m, doc.root)
+		parse_module_configuration(m)
 	end
 
-	def self.read_module_version(m, xml_root)
+	def self.parse_module_configuration(m)
+		f = File.open(m[:config_path])
+		xml_root = Nokogiri::XML(f) { |config| config.strict }.root
+		f.close
+
+		version_warnings = parse_module_version(m, xml_root)
+		# events, event_warnings = parse_all_events_observers(xml_root)
+
+		# config_warnings = version_warnings + event_warnings
+
+		# all_module_warnings = m[:warnings] || []
+		# all_module_warnings.concat(config_warnings.map { |msg| { :file => m[:config_path], :message => msg } })
+
+		# m[:warnings] = all_module_warnings unless all_module_warnings.size == 0
+
+		m
+	end
+
+	def self.parse_module_version(m, xml_root)
 		xml_node = xml_root.at_xpath('/config/modules')
+
 		if xml_node.nil?
-			m[:warnings] ||= []
-			m[:warnings] << { :file => m[:config_path], :message => "config.xml is missing a /config/modules node" }
-			return m
+			return ["config.xml is missing a /config/modules node"]
 		end
 
+		warnings = []
+
 		unless xml_node.at_xpath("./#{m[:name]}")
-			m[:warnings] ||= []
-			m[:warnings] << { :file => m[:config_path], :message => "config.xml is missing a /config/modules/#{m[:name]} node" }
+			warnings << "config.xml is missing a /config/modules/#{m[:name]} node"
 		end
 
 		xml_node.xpath("./*").each do |n|
 			unless n.name.to_sym == m[:name]
-				m[:warnings] ||= []
-				m[:warnings] << { :file => m[:config_path], :message => "config.xml contains configuration for a different module (/config/modules/#{n.name})" }
+				warnings << "config.xml contains configuration for a different module (/config/modules/#{n.name})"
 			end
 		end
 
-		if xml_node.at_xpath("./#{m[:name]}/version")
-			m[:version] = xml_node.at_xpath("./#{m[:name]}/version").content
-		end
+		m[:version] = xml_node.at_xpath("./#{m[:name]}/version").content unless xml_node.at_xpath("./#{m[:name]}/version").nil?
 
-		m
+		warnings
 	end
 
 	def self.parse_scoped_events_observers(base_path, xml_node)

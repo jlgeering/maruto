@@ -20,29 +20,24 @@ module Maruto
 			''').root
 		end
 
-		it "will return the module definition hash" do
-			m = ModuleConfiguration.read_module_version(@module_a, @xml_config_root)
-			m.must_be_kind_of Hash
-			m.must_equal @module_a
+		it "will return the an array of warnings" do
+			warnings = ModuleConfiguration.parse_module_version(@module_a, @xml_config_root)
+			warnings.must_be_kind_of Array
 		end
-		it "will add the version to the hash" do
-			m = ModuleConfiguration.read_module_version(@module_a, @xml_config_root)
-			m.must_include :version
-			m[:version].must_equal '0.0.1'
+		it "will add the version to the module" do
+			ModuleConfiguration.parse_module_version(@module_a, @xml_config_root)
+			@module_a.must_include :version
+			@module_a[:version].must_equal '0.0.1'
 		end
 		it "will add a warning when then modules node is missing" do
-			w = @module_a.merge({ :warnings => ['first warning'] })
-			m = ModuleConfiguration.read_module_version(w, Nokogiri::XML('<config><a></a></config>').root)
-			m[:warnings].size.must_equal 2
-			m[:warnings][-1][:file].must_equal m[:config_path]
-			m[:warnings][-1][:message].must_include '/config/modules'
+			warnings = ModuleConfiguration.parse_module_version(@module_a, Nokogiri::XML('<config><a></a></config>').root)
+			warnings.size.must_equal 1
+			warnings[0].must_include '/config/modules'
 		end
 		it "will add a warning when then node with the module's name is missing" do
-			w = @module_a.merge({ :warnings => ['first warning'] })
-			m = ModuleConfiguration.read_module_version(w, Nokogiri::XML('<config><modules></modules></config>').root)
-			m[:warnings].size.must_equal 2
-			m[:warnings][-1][:file].must_equal m[:config_path]
-			m[:warnings][-1][:message].must_include '/config/modules/Mage_A'
+			warnings = ModuleConfiguration.parse_module_version(@module_a, Nokogiri::XML('<config><modules></modules></config>').root)
+			warnings.size.must_equal 1
+			warnings[0].must_include '/config/modules/Mage_A'
 		end
 		it "will add a warning when there is a node from a different module" do
 			xml_config_root = Nokogiri::XML('''
@@ -55,13 +50,10 @@ module Maruto
 					</Mage_B>
 				</modules></config>
 			''').root
-			w = @module_a.merge({ :warnings => ['first warning'] })
-			m = ModuleConfiguration.read_module_version(w, xml_config_root)
-			m[:warnings].size.must_equal 2
-			m[:warnings][-1][:file].must_equal m[:config_path]
-			m[:warnings][-1][:message].must_include 'Mage_B'
+			warnings = ModuleConfiguration.parse_module_version(@module_a, xml_config_root)
+			warnings.size.must_equal 1
+			warnings[0].must_include 'Mage_B'
 		end
 
 	end
-
 end
