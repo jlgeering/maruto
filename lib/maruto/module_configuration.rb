@@ -9,7 +9,6 @@ module Maruto::ModuleConfiguration
 		f.close
 
 		read_module_version(m, doc.root)
-		read_module_version(m, doc.root)
 	end
 
 	def self.read_module_version(m, xml_root)

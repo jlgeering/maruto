@@ -100,8 +100,8 @@ module Maruto
 				''').root.xpath('/')
 				events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', @xml_node)
 				events.size.must_equal 1
+				# TODO check if Magento keeps or skips such an observer
 				events[0][:observers].size.must_equal 0
-
 				warnings.size.must_equal 1
 				warnings[0].must_include 'root/events/first_event/observers/invalid_observer/type'
 				warnings[0].must_include 'model'
