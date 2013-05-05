@@ -72,15 +72,26 @@ module Maruto::ModuleConfiguration
 					:name => o.name,
 					:path => event[:path] + '/observers/' + o.name,
 				}
-				observer[:type]   = o.at_xpath('type').content    unless o.at_xpath('type').nil?
-				observer[:class]  = o.at_xpath('class').content   unless o.at_xpath('class').nil?
-				observer[:method] = o.at_xpath('method').content  unless o.at_xpath('method').nil?
+				type              = o.at_xpath('type').content   unless o.at_xpath('type').nil?
+				observer[:class]  = o.at_xpath('class').content  unless o.at_xpath('class').nil?
+				observer[:method] = o.at_xpath('method').content unless o.at_xpath('method').nil?
 
-				if /^(model|object|singleton)$/ !~ observer[:type]
-					warnings << "#{observer[:path]}/type should be 'model', 'object', or 'singleton', but was '#{observer[:type]}'"
+				if type.nil?
+					# default is singleton
+					observer[:type] = :singleton
+				elsif type == 'object'
+					# object is an alias for model
+					observer[:type] = :model
+					warnings << "#{observer[:path]}/type 'object' is an alias for 'model'"
+				elsif /^(disabled|model|singleton)$/ =~ type
+					observer[:type] = type.to_sym
 				else
-					event[:observers] << observer
+					# everything else => default (with warning)
+					observer[:type] = :singleton
+					warnings << "#{observer[:path]}/type replaced with 'singleton', was '#{type}' (possible values: 'disabled', 'model', 'singleton', or nothing)"
 				end
+
+				event[:observers] << observer
 			end
 
 			events << event

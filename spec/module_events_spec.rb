@@ -13,7 +13,7 @@ module Maruto
 						<first_event>
 							<observers>
 								<first_observer>
-									<type>model</type>                    <!-- model, object or singleton -->
+									<type>model</type>                    <!-- model, singleton or disabled, default is singleton (object is an alias for model) -->
 									<class>Mage_A_Model_Observer</class>  <!-- observers class or class alias -->
 									<method>methodName</method>           <!-- observer\'s method to be called -->
 									<args></args>                         <!-- additional arguments passed to observer -->
@@ -23,15 +23,19 @@ module Maruto
 						<second_event>
 							<observers>
 								<second_observer>
-									<type>object</type>
 									<class>Mage_B_Model_Observer</class>
 									<method>doSomething</method>
 								</second_observer>
 								<third_observer>
-									<type>singleton</type>
+									<type>object</type>
 									<class>Mage_C_Model_Observer</class>
 									<method>helloWorld</method>
 								</third_observer>
+								<disabled_observer>
+									<type>disabled</type>
+									<class>Mage_C_Model_Observer</class>
+									<method>helloWorld</method>
+								</disabled_observer>
 							</observers>
 						</second_event>
 					</events>
@@ -45,7 +49,6 @@ module Maruto
 			it "will return a array of warnings" do
 				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', @xml_node)
 				warnings.must_be_kind_of Array
-				warnings.size.must_equal 0
 			end
 			it "will handle a missing <events> element or a nil node" do
 				node = Nokogiri::XML('''
@@ -63,12 +66,51 @@ module Maruto
 				events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', @xml_node)
 				events[0][:path].must_equal 'root/events/first_event'
 			end
-			it "will read the name type class and method of an observer" do
+			it "will read the name, class, and method of an observer" do
 				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', @xml_node)
 				events[0][:observers][0][:name].must_equal 'first_observer'
-				events[0][:observers][0][:type].must_equal 'model'
 				events[0][:observers][0][:class].must_equal 'Mage_A_Model_Observer'
 				events[0][:observers][0][:method].must_equal 'methodName'
+			end
+			it "will read the type of an observer" do
+				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', @xml_node)
+				events[0][:observers][0][:type].must_equal :model
+			end
+			it "will handle observer declarations with default type" do
+				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', @xml_node)
+				events[1][:observers][0][:type].must_equal :singleton
+			end
+			it "will treat type 'object' as an alias to 'model'" do
+				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', @xml_node)
+				events[1][:observers][1][:type].must_equal :model
+			end
+			it "will handle disabled observers" do
+				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', @xml_node)
+				events[1][:observers][2][:type].must_equal :disabled
+			end
+			it "will handle observers with an invalid type and add a warning" do
+				@xml_node = Nokogiri::XML('''
+					<events>
+						<first_event>
+							<observers>
+								<invalid_type>
+									<type>something</type>
+									<class>Hello_World</class>
+									<method>helloWorld</method>
+								</invalid_type>
+							</observers>
+						</first_event>
+					</events>
+				''').root.xpath('/')
+				events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', @xml_node)
+				events.size.must_equal 1
+				events[0][:observers].size.must_equal 1
+				events[0][:observers][0].must_include :type
+				events[0][:observers][0][:type].must_equal :singleton
+				warnings.size.must_equal 1
+				warnings[0].must_include 'root/events/first_event/observers/invalid_type/type'
+				warnings[0].must_include 'singleton'
+				warnings[0].must_include 'something'
 			end
 			it "will build the path to an event observer" do
 				events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', @xml_node)
@@ -82,7 +124,7 @@ module Maruto
 				events[0][:name].must_equal 'first_event'
 				events[0][:observers].size.must_equal 1
 				events[1][:name].must_equal 'second_event'
-				events[1][:observers].size.must_equal 2
+				events[1][:observers].size.must_equal 3
 			end
 			it "will handle incomplete observer declarations" do
 				@xml_node = Nokogiri::XML('''
@@ -91,15 +133,9 @@ module Maruto
 							<observers>
 								<o1></o1>
 								<o2>
-									<type></type>
 									<class></class>
 									<method></method>
 								</o2>
-								<o3>
-									<type>model</type>
-									<class></class>
-									<method></method>
-								</o3>
 							</observers>
 						</first_event>
 					</events>
@@ -107,31 +143,6 @@ module Maruto
 				events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', @xml_node)
 				events.size.must_equal 1
 				events[0][:observers].size.must_be :>, 0
-			end
-			it "will skip observers with an invalid type and add a warning" do
-				@xml_node = Nokogiri::XML('''
-					<events>
-						<first_event>
-							<observers>
-								<invalid_observer>
-									<type>something</type>
-									<class>Mage_C_Model_Observer</class>
-									<method>helloWorld</method>
-								</invalid_observer>
-							</observers>
-						</first_event>
-					</events>
-				''').root.xpath('/')
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', @xml_node)
-				events.size.must_equal 1
-				# TODO check if Magento keeps or skips such an observer
-				events[0][:observers].size.must_equal 0
-				warnings.size.must_equal 1
-				warnings[0].must_include 'root/events/first_event/observers/invalid_observer/type'
-				warnings[0].must_include 'model'
-				warnings[0].must_include 'object'
-				warnings[0].must_include 'singleton'
-				warnings[0].must_include 'something'
 			end
 			# it "will warn if an observers class is invalid" do
 			# 	# TODO
@@ -159,7 +170,7 @@ module Maruto
 				node = Nokogiri::XML('''<config>
 					<global>
 						<events>
-							<e1><observers><o1></o1></observers></e1>
+							<e1><observers><o1><type>invalid</type></o1></observers></e1>
 						</events>
 					</global>
 					<frontend>

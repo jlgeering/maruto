@@ -61,6 +61,9 @@ describe Maruto::ModuleDefinition do
 		end
 
 		it "will find dependencies" do
+			h = Maruto::ModuleDefinition.parse_module_definition(@xml_nodes[:Mage_Core])
+			h.wont_include :dependencies
+
 			h = Maruto::ModuleDefinition.parse_module_definition(@xml_nodes[:Mage_Eav])
 			h.must_include :dependencies
 			h[:dependencies].size.must_equal 1
