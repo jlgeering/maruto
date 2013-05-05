@@ -10,7 +10,6 @@ module Maruto::MagentoInstance
 
 			sorted_modules.each do |m|
 				Maruto::ModuleConfiguration.parse_module_configuration(m)
-				# ModuleConfiguration.analyse(m, active_modules)
 			end
 
 			# TODO move to function: collect_warnings + write spec

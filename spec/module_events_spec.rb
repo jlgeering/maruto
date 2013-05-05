@@ -7,7 +7,7 @@ module Maruto
 	describe ModuleConfiguration do
 
 
-		describe "when parsing a module config.xml and reading scoped events observers" do
+		describe "when parsing a module config.xml and reading scoped event observers" do
 
 			before do
 				@events_root = Nokogiri::XML('''
@@ -45,50 +45,50 @@ module Maruto
 			end
 
 			it "will return a array of events" do
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', @events_root)
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('', @events_root)
 				events.must_be_kind_of Array
 				events.size.must_equal 2
 			end
 			it "will return a array of warnings" do
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', @events_root)
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('', @events_root)
 				warnings.must_be_kind_of Array
 			end
 			it "will handle a missing <events> element or a nil node" do
 				node = Nokogiri::XML('''
 					<hello></hello>
 				''').root.xpath('/')
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', node)
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('', node)
 				events.must_be_kind_of Array
 				events.size.must_equal 0
 
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', nil)
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('', nil)
 				events.must_be_kind_of Array
 				events.size.must_equal 0
 			end
 			it "will build the path to an event" do
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', @events_root)
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('root', @events_root)
 				events[0][:path].must_equal 'root/events/first_event'
 			end
 			it "will read the name, class, and method of an observer" do
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', @events_root)
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('', @events_root)
 				events[0][:observers][0][:name].must_equal 'first_observer'
 				events[0][:observers][0][:class].must_equal 'Mage_A_Model_Observer'
 				events[0][:observers][0][:method].must_equal 'methodName'
 			end
 			it "will read the type of an observer" do
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', @events_root)
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('', @events_root)
 				events[0][:observers][0][:type].must_equal :model
 			end
 			it "will handle observer declarations with default type" do
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', @events_root)
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('', @events_root)
 				events[1][:observers][0][:type].must_equal :singleton
 			end
 			it "will treat type 'object' as an alias to 'model'" do
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', @events_root)
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('', @events_root)
 				events[1][:observers][1][:type].must_equal :model
 			end
 			it "will handle disabled observers" do
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', @events_root)
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('', @events_root)
 				events[1][:observers][2][:type].must_equal :disabled
 			end
 			it "will handle observers with an invalid type and add a warning" do
@@ -105,7 +105,7 @@ module Maruto
 						</first_event>
 					</events>
 				''').root.xpath('/')
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', node)
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('root', node)
 				events.size.must_equal 1
 				events[0][:observers].size.must_equal 1
 				events[0][:observers][0].must_include :type
@@ -116,11 +116,11 @@ module Maruto
 				warnings[0].must_include 'something'
 			end
 			it "will build the path to an event observer" do
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', @events_root)
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('root', @events_root)
 				events[0][:observers][0][:path].must_equal 'root/events/first_event/observers/first_observer'
 			end
-			it "will group observers by events" do
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('', @events_root)
+			it "will group observers by event" do
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('', @events_root)
 				events.size.must_equal 2
 				events[0].must_include :name
 				events[0].must_include :observers
@@ -143,7 +143,7 @@ module Maruto
 						</first_event>
 					</events>
 				''').root.xpath('/')
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', node)
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('root', node)
 				events.size.must_equal 1
 				events[0][:observers].size.must_be :>, 0
 			end
@@ -163,7 +163,7 @@ module Maruto
 						</events>
 					</scope>
 				</config>''').root
-				events, warnings = ModuleConfiguration.parse_scoped_events_observers('/config/scope', node.xpath('/config/scope'))
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('/config/scope', node.xpath('/config/scope'))
 				events.size.must_equal 2
 				warnings.size.must_equal 1
 				warnings[0].must_include '/config/scope'
@@ -200,19 +200,19 @@ module Maruto
 
 			it "will add events to the module" do
 				@module_a.wont_include :events
-				ModuleConfiguration.parse_all_events_observers(@module_a, @xml_root)
+				ModuleConfiguration.parse_all_event_observers(@module_a, @xml_root)
 				@module_a.must_include :events
 			end
 
 			it "will collect warnings into an array" do
-				warnings = ModuleConfiguration.parse_all_events_observers(@module_a, @xml_root)
+				warnings = ModuleConfiguration.parse_all_event_observers(@module_a, @xml_root)
 				warnings.size.must_be :>, 0
 			end
 
 
 			it "will group events by scope and build the correct path" do
 				@module_a.wont_include :events
-				ModuleConfiguration.parse_all_events_observers(@module_a, @xml_root)
+				ModuleConfiguration.parse_all_event_observers(@module_a, @xml_root)
 				@module_a.must_include :events
 
 				@module_a[:events].must_be_kind_of Hash
@@ -243,7 +243,7 @@ module Maruto
 				</config>''').root
 
 				@module_a.wont_include :events
-				ModuleConfiguration.parse_all_events_observers(@module_a, node)
+				ModuleConfiguration.parse_all_event_observers(@module_a, node)
 				@module_a.must_include :events
 
 				@module_a[:events].wont_include :frontend
@@ -261,7 +261,7 @@ module Maruto
 				</config>''').root
 
 				@module_a.wont_include :events
-				ModuleConfiguration.parse_all_events_observers(@module_a, node)
+				ModuleConfiguration.parse_all_event_observers(@module_a, node)
 				@module_a.wont_include :events
 			end
 
@@ -273,7 +273,7 @@ module Maruto
 			# 	xml_node_no_obs = Nokogiri::XML('''
 			# 		<config><scope><events><first_event></first_event></events></scope></config>
 			# 	''').root
-			# 	events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', xml_node_no_obs.xpath('/config/scope'))
+			# 	events, warnings = ModuleConfiguration.parse_scoped_event_observers('root', xml_node_no_obs.xpath('/config/scope'))
 			# 	events.size.must_equal 0
 			# 	warnings.size.must_equal 1
 			# 	warnings[0].must_include 'root/events/first_event'
@@ -282,7 +282,7 @@ module Maruto
 			# 	xml_node_empty_obs = Nokogiri::XML('''
 			# 		<config><scope><events><first_event><observers></observers></first_event></events></scope></config>
 			# 	''').root
-			# 	events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', xml_node_empty_obs.xpath('/config/scope'))
+			# 	events, warnings = ModuleConfiguration.parse_scoped_event_observers('root', xml_node_empty_obs.xpath('/config/scope'))
 			# 	events.size.must_equal 0
 			# 	warnings.size.must_equal 1
 			# 	warnings[0].must_include 'root/events/first_event/observers'

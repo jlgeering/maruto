@@ -45,7 +45,7 @@ module Maruto::ModuleConfiguration
 		warnings
 	end
 
-	def self.parse_scoped_events_observers(base_path, xml_node)
+	def self.parse_scoped_event_observers(base_path, xml_node)
 
 		return [],[] if xml_node.nil?
 
@@ -96,12 +96,12 @@ module Maruto::ModuleConfiguration
 		return events, warnings
 	end
 
-	def self.parse_all_events_observers(m, xml_node)
+	def self.parse_all_event_observers(m, xml_node)
 		scopes = [:global, :frontend, :adminhtml]
 		events = {}
 		warnings = []
 		scopes.each do |scope|
-			e, w = parse_scoped_events_observers("/config/#{scope}",    xml_node.xpath("/config/#{scope}"))
+			e, w = parse_scoped_event_observers("/config/#{scope}",    xml_node.xpath("/config/#{scope}"))
 
 			events[scope] = e if e.size > 0
 			warnings.concat w
