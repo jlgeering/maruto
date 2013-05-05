@@ -61,9 +61,9 @@ module Maruto::ModuleConfiguration
 					:name => o.name,
 					:path => event[:path] + '/observers/' + o.name,
 				}
-				observer[:type]   = o.at_xpath('type').content
-				observer[:class]  = o.at_xpath('class').content
-				observer[:method] = o.at_xpath('method').content
+				observer[:type]   = o.at_xpath('type').content    unless o.at_xpath('type').nil?
+				observer[:class]  = o.at_xpath('class').content   unless o.at_xpath('class').nil?
+				observer[:method] = o.at_xpath('method').content  unless o.at_xpath('method').nil?
 
 				if /^(model|object|singleton)$/ !~ observer[:type]
 					warnings << "#{observer[:path]}/type should be 'model', 'object', or 'singleton', but was '#{observer[:type]}'"
@@ -81,11 +81,15 @@ module Maruto::ModuleConfiguration
 	def self.parse_all_events_observers(xml_node)
 		scopes = [:global, :frontend, :adminhtml]
 		events = {}
+		warnings = []
 		scopes.each do |scope|
-			e,w = parse_scoped_events_observers("/config/#{scope}",    xml_node.xpath("/config/#{scope}"))
+			e, w = parse_scoped_events_observers("/config/#{scope}",    xml_node.xpath("/config/#{scope}"))
 			events[scope] = e if e.size > 0
+			warnings.concat w
 		end
-		events
+		return events, warnings
 	end
 
+	def self.analyse_module_configuration()
+	end
 end

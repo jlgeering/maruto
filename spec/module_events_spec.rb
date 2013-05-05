@@ -84,6 +84,30 @@ module Maruto
 				events[1][:name].must_equal 'second_event'
 				events[1][:observers].size.must_equal 2
 			end
+			it "will handle incomplete observer declarations" do
+				@xml_node = Nokogiri::XML('''
+					<events>
+						<first_event>
+							<observers>
+								<o1></o1>
+								<o2>
+									<type></type>
+									<class></class>
+									<method></method>
+								</o2>
+								<o3>
+									<type>model</type>
+									<class></class>
+									<method></method>
+								</o3>
+							</observers>
+						</first_event>
+					</events>
+				''').root.xpath('/')
+				events, warnings = ModuleConfiguration.parse_scoped_events_observers('root', @xml_node)
+				events.size.must_equal 1
+				events[0][:observers].size.must_be :>, 0
+			end
 			it "will skip observers with an invalid type and add a warning" do
 				@xml_node = Nokogiri::XML('''
 					<events>
@@ -131,6 +155,70 @@ module Maruto
 				warnings[0].must_include '/config/scope'
 			end
 
+			it "will group events by scope and build the correct path" do
+				node = Nokogiri::XML('''<config>
+					<global>
+						<events>
+							<e1><observers><o1></o1></observers></e1>
+						</events>
+					</global>
+					<frontend>
+						<events>
+							<e2><observers></observers></e2>
+							<e3></e3>
+						</events>
+					</frontend>
+					<adminhtml>
+						<events>
+							<e4></e4>
+							<e5></e5>
+							<e6></e6>
+						</events>
+					</adminhtml>
+				</config>''').root
+
+				e, w = ModuleConfiguration.parse_all_events_observers(node)
+
+				e.must_be_kind_of Hash
+				e.must_include :global
+				e.must_include :frontend
+				e.must_include :adminhtml
+
+				e[:global].size.must_equal 1
+				e[:global][0][:name].must_equal 'e1'
+				e[:global][0][:path].must_include '/config/global/events'
+
+				e[:frontend].size.must_equal 2
+				e[:frontend][0][:name].must_equal 'e2'
+				e[:frontend][0][:path].must_include '/config/frontend/events'
+
+				e[:adminhtml].size.must_equal 3
+				e[:adminhtml][0][:name].must_equal 'e4'
+				e[:adminhtml][0][:path].must_include '/config/adminhtml/events'
+
+				w.size.must_be :>, 0
+			end
+
+			it "will skip scopes without events" do
+				node = Nokogiri::XML('''<config>
+					<global>
+						<events>
+						</events>
+					</global>
+					<frontend>
+					</frontend>
+				</config>''').root
+				e, w = ModuleConfiguration.parse_all_events_observers(node)
+				e.must_be_kind_of Hash
+				e.wont_include :global
+				e.wont_include :frontend
+				e.wont_include :adminhtml
+			end
+
+		end
+
+		describe "when analysing events observers" do
+
 			# it "will warn when an event has no observers" do
 			# 	xml_node_no_obs = Nokogiri::XML('''
 			# 		<config><scope><events><first_event></first_event></events></scope></config>
@@ -149,64 +237,6 @@ module Maruto
 			# 	warnings.size.must_equal 1
 			# 	warnings[0].must_include 'root/events/first_event/observers'
 			# end
-
-			it "will group events by scope and build the correct path" do
-				node = Nokogiri::XML('''<config>
-					<global>
-						<events>
-							<e1><observers></observers></e1>
-						</events>
-					</global>
-					<frontend>
-						<events>
-							<e2><observers></observers></e2>
-							<e3></e3>
-						</events>
-					</frontend>
-					<adminhtml>
-						<events>
-							<e4></e4>
-							<e5></e5>
-							<e6></e6>
-						</events>
-					</adminhtml>
-				</config>''').root
-
-				e = ModuleConfiguration.parse_all_events_observers(node)
-
-				e.must_be_kind_of Hash
-				e.must_include :global
-				e.must_include :frontend
-				e.must_include :adminhtml
-
-				e[:global].size.must_equal 1
-				e[:global][0][:name].must_equal 'e1'
-				e[:global][0][:path].must_include '/config/global/events'
-
-				e[:frontend].size.must_equal 2
-				e[:frontend][0][:name].must_equal 'e2'
-				e[:frontend][0][:path].must_include '/config/frontend/events'
-
-				e[:adminhtml].size.must_equal 3
-				e[:adminhtml][0][:name].must_equal 'e4'
-				e[:adminhtml][0][:path].must_include '/config/adminhtml/events'
-			end
-
-			it "will skip scopes without events" do
-				node = Nokogiri::XML('''<config>
-					<global>
-						<events>
-						</events>
-					</global>
-					<frontend>
-					</frontend>
-				</config>''').root
-				e = ModuleConfiguration.parse_all_events_observers(node)
-				e.must_be_kind_of Hash
-				e.wont_include :global
-				e.wont_include :frontend
-				e.wont_include :adminhtml
-			end
 
 		end
 	end
