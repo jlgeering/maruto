@@ -9,7 +9,7 @@ module Maruto::ModuleConfiguration
 		f.close
 
 		version_warnings = parse_module_version(m, xml_root)
-		event_warnings   = parse_all_events_observers(m, xml_root)
+		event_warnings   = parse_all_event_observers(m, xml_root)
 
 		config_warnings = version_warnings + event_warnings
 
@@ -107,6 +107,9 @@ module Maruto::ModuleConfiguration
 			warnings.concat w
 		end
 		m[:events] = events if events.keys.size > 0
+
+		warnings << "the 'admin' area should not contain events (/config/admin/events)" unless xml_node.at_xpath("/config/admin/events").nil?
+
 		return warnings
 	end
 

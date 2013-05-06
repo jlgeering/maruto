@@ -261,8 +261,26 @@ module Maruto
 				</config>''').root
 
 				@module_a.wont_include :events
-				ModuleConfiguration.parse_all_event_observers(@module_a, node)
+				warnings = ModuleConfiguration.parse_all_event_observers(@module_a, node)
 				@module_a.wont_include :events
+
+				warnings.size.must_equal 0
+			end
+
+			# TODO check this
+			it "will add a warning for events in the 'admin' area" do
+				node = Nokogiri::XML('''<config>
+					<admin>
+						<events>
+						</events>
+					</admin>
+				</config>''').root
+
+				@module_a.wont_include :events
+				warnings = ModuleConfiguration.parse_all_event_observers(@module_a, node)
+				@module_a.wont_include :events
+
+				warnings.size.must_equal 1
 			end
 
 		end
