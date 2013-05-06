@@ -75,6 +75,7 @@ module Maruto
 				events[0][:observers][0][:class].must_equal 'Mage_A_Model_Observer'
 				events[0][:observers][0][:method].must_equal 'methodName'
 			end
+			# see Mage_Core_Model_App::dispatchEvent
 			it "will read the type of an observer" do
 				events, warnings = ModuleConfiguration.parse_scoped_event_observers('', @events_root)
 				events[0][:observers][0][:type].must_equal :model
@@ -285,7 +286,114 @@ module Maruto
 
 		end
 
-		describe "when analysing events observers" do
+		describe "when collecting all event observers" do
+			before do
+				@module_a = { :name => :Mage_A, :active => true, :code_pool => :core, :defined => 'a', :config_path => 'app/code/core/Mage/A/etc/config.xml' }
+				@module_b = { :name => :Mage_B, :active => true, :code_pool => :core, :defined => 'b', :config_path => 'app/code/core/Mage/B/etc/config.xml' }
+				@module_c = { :name => :Mage_C, :active => true, :code_pool => :core, :defined => 'c', :config_path => 'app/code/core/Mage/C/etc/config.xml' }
+				@module_d = { :name => :Mage_D, :active => true, :code_pool => :core, :defined => 'd', :config_path => 'app/code/core/Mage/D/etc/config.xml' }
+
+				@observer_1 = { :name => 'a_o1', :type => 'singleton', :class => 'Mage_A_Model_Observer', :method => 'global_1' }
+
+				@module_a[:events] = {
+					:global => [{ :name => 'e1', :observers => [
+						@observer_1,
+						{ :name => 'a_o2', :type => 'singleton', :class => 'Mage_A_Model_Observer', :method => 'global_2' }
+					] }],
+					:adminhtml => [{ :name => 'e1', :observers => [
+						{ :name => 'a_o1', :type => 'singleton', :class => 'Mage_A_Model_Observer', :method => 'adminhtml_1' }
+					] }],
+					:frontend => [{ :name => 'e1', :observers => [
+						{ :name => 'a_o1', :type => 'singleton', :class => 'Mage_A_Model_Observer', :method => 'frontend_1' }
+					] }]
+				}
+
+				@sorted_modules = [@module_a]
+			end
+
+			it "will group observers by event" do
+				h = ModuleConfiguration.collect_scoped_event_observers(:global, @sorted_modules)
+				h.must_include 'e1'
+				h['e1'].must_include 'a_o1'
+				h['e1'].must_include 'a_o2'
+
+				[:name, :type, :class, :method].each do |key|
+					h['e1']['a_o1'].must_include key
+				end
+
+				@module_a.wont_include :warnings
+			end
+			it "will add the source module to the observer" do
+				h, w = ModuleConfiguration.collect_scoped_event_observers(:global, @sorted_modules)
+				h['e1']['a_o1'].must_include :module
+				h['e1']['a_o1'][:module].must_equal :Mage_A
+				@module_a.wont_include :warnings
+			end
+			it "will add a warning when overwriting an observer" do
+				@module_b[:events] = {
+					:global => [{ :name => 'e1', :observers => [ @observer_1 ] }]
+				}
+				h = ModuleConfiguration.collect_scoped_event_observers(:global, [@module_a, @module_b])
+
+				@module_b.must_include :warnings
+				@module_b[:warnings].size.must_equal 1
+				# must include area
+				@module_b[:warnings][0].must_include 'global'
+			end
+			it "will add a warning when overwriting an observer without module dependency" do
+				# TODO
+			end
+			it "wont add a warning when overwriting an observer to disable it" do
+				# TODO
+			end
+			it "will add a warning when disabling a non-existing observer" do
+				# TODO
+			end
+
+
+			it "will include all areas" do
+				h = ModuleConfiguration.collect_event_observers([])
+
+				h.keys.size.must_equal 3
+
+				h.must_include :global
+				h.must_include :adminhtml
+				h.must_include :frontend
+
+				h[:global].must_be_kind_of Hash
+				h[:global].size.must_equal 0
+
+				h[:adminhtml].must_be_kind_of Hash
+				h[:adminhtml].size.must_equal 0
+
+				h[:frontend].must_be_kind_of Hash
+				h[:frontend].size.must_equal 0
+			end
+
+			it "will group observers by area" do
+				h = ModuleConfiguration.collect_event_observers(@sorted_modules)
+
+				h[:global].must_include 'e1'
+				h[:global]['e1'].must_include 'a_o1'
+				h[:global]['e1'].must_include 'a_o2'
+
+				h[:adminhtml].must_include 'e1'
+				h[:adminhtml]['e1'].must_include 'a_o1'
+				h[:adminhtml]['e1'].wont_include 'a_o2'
+
+				h[:frontend].must_include 'e1'
+				h[:frontend]['e1'].must_include 'a_o1'
+				h[:frontend]['e1'].wont_include 'a_o2'
+
+				@module_a.wont_include :warnings
+			end
+		end
+
+		describe "when analysing event observers" do
+
+			it "will add a warning when an observer has already been declared" do
+
+			end
 
 			# it "will warn when an event has no observers" do
 			# 	xml_node_no_obs = Nokogiri::XML('''

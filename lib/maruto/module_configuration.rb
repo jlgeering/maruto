@@ -72,6 +72,7 @@ module Maruto::ModuleConfiguration
 				observer[:class]  = o.at_xpath('class').content  unless o.at_xpath('class').nil?
 				observer[:method] = o.at_xpath('method').content unless o.at_xpath('method').nil?
 
+				# see Mage_Core_Model_App::dispatchEvent
 				if type.nil?
 					# default is singleton
 					observer[:type] = :singleton
@@ -113,6 +114,45 @@ module Maruto::ModuleConfiguration
 		return warnings
 	end
 
-	def self.analyse_module_configuration()
+	def self.collect_scoped_event_observers(area, sorted_modules)
+		events = Hash.new
+
+		sorted_modules.each do |m|
+			if m.include? :events and m[:events].include? area then
+				m[:events][area].each do |event|
+					event_name = event[:name]
+					events[event_name] ||= Hash.new
+					event[:observers].each do |observer|
+						observer_name = observer[:name]
+						if events[event_name].include? observer_name
+							add_module_config_warning(m, "event_observer:#{area}/#{event_name}/#{observer_name} - defined in #{events[event_name][observer_name][:module]} and redefined in #{m[:name]}")
+						end
+						events[event_name][observer_name] = observer
+						events[event_name][observer_name][:module] = m[:name]
+					end
+				end
+			end
+		end
+
+		events
 	end
+
+	def self.collect_event_observers(sorted_modules)
+		areas = [:global, :frontend, :adminhtml]
+		events = {}
+
+		areas.each do |area|
+			events[area] = collect_scoped_event_observers(area, sorted_modules)
+		end
+
+		events
+	end
+
+private
+
+	def self.add_module_config_warning(m, msg)
+		m[:warnings] ||= []
+		m[:warnings] << { :file => m[:config_path], :message => msg }
+	end
+
 end

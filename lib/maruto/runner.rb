@@ -43,6 +43,7 @@ class Maruto::Runner < Thor
 
 	desc "warnings", "list potential problems found in the config"
 	method_option :magento_root, :aliases => "-m", :default => "."
+	method_option :with_core, :type => :boolean, :aliases => "-c", :default => false
 	def warnings()
 
 		magento_root = check_magento_folder()
@@ -52,11 +53,19 @@ class Maruto::Runner < Thor
 
 		# next gen maruto:
 
-		all_warnings = Maruto::warnings magento_root
-		all_warnings.group_by { |e| e[:module] }.each do |m,module_warnings|
-			puts "[module:#{m}]"
-			module_warnings.each do |w|
-				puts "   [file:#{w[:file]}] #{w[:message]}"
+		with_core = options[:with_core]
+
+		magento = Maruto::MagentoInstance.load(magento_root)
+
+		magento[:warnings].group_by { |e| e[:module] }.each do |m,module_warnings|
+			if with_core or magento[:all_modules][m][:code_pool] != :core then
+				puts "[module:#{m}]"
+				module_warnings.group_by { |e| e[:file] }.each do |file,warnings|
+					puts "  [file:#{file}]"
+					warnings.each do |w|
+						puts "    #{w[:message]}"
+					end
+				end
 			end
 		end
 
