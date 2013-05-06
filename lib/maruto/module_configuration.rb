@@ -97,13 +97,13 @@ module Maruto::ModuleConfiguration
 	end
 
 	def self.parse_all_event_observers(m, xml_node)
-		scopes = [:global, :frontend, :adminhtml]
+		areas = [:global, :frontend, :adminhtml]
 		events = {}
 		warnings = []
-		scopes.each do |scope|
-			e, w = parse_scoped_event_observers("/config/#{scope}",    xml_node.xpath("/config/#{scope}"))
+		areas.each do |area|
+			e, w = parse_scoped_event_observers("/config/#{area}",    xml_node.xpath("/config/#{area}"))
 
-			events[scope] = e if e.size > 0
+			events[area] = e if e.size > 0
 			warnings.concat w
 		end
 		m[:events] = events if events.keys.size > 0

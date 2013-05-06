@@ -150,23 +150,23 @@ module Maruto
 			# it "will warn if an observers class is invalid" do
 			# 	# TODO
 			# end
-			it "will handle duplicate scopes and add a warning" do
+			it "will handle duplicate areas and add a warning" do
 				node = Nokogiri::XML('''<config>
-					<scope>
+					<area>
 						<events>
 							<e1><observers></observers></e1>
 						</events>
-					</scope>
-					<scope>
+					</area>
+					<area>
 						<events>
 							<e2><observers></observers></e2>
 						</events>
-					</scope>
+					</area>
 				</config>''').root
-				events, warnings = ModuleConfiguration.parse_scoped_event_observers('/config/scope', node.xpath('/config/scope'))
+				events, warnings = ModuleConfiguration.parse_scoped_event_observers('/config/area', node.xpath('/config/area'))
 				events.size.must_equal 2
 				warnings.size.must_equal 1
-				warnings[0].must_include '/config/scope'
+				warnings[0].must_include '/config/area'
 			end
 		end
 
