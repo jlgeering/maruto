@@ -195,6 +195,11 @@ module Maruto
 								<e6></e6>
 							</events>
 						</adminhtml>
+						<crontab>
+							<events>
+								<e1></e1>
+							</events>
+						</crontab>
 					</config>
 				''').root
 			end
@@ -232,6 +237,10 @@ module Maruto
 				@module_a[:events][:adminhtml].size.must_equal 3
 				@module_a[:events][:adminhtml][0][:name].must_equal 'e4'
 				@module_a[:events][:adminhtml][0][:path].must_include '/config/adminhtml/events'
+
+				@module_a[:events][:crontab].size.must_equal 1
+				@module_a[:events][:crontab][0][:name].must_equal 'e1'
+				@module_a[:events][:crontab][0][:path].must_include '/config/crontab/events'
 			end
 
 			it "will skip scopes without events" do
@@ -268,7 +277,6 @@ module Maruto
 				warnings.size.must_equal 0
 			end
 
-			# TODO check this
 			it "will add a warning for events in the 'admin' area" do
 				node = Nokogiri::XML('''<config>
 					<admin>
@@ -337,8 +345,6 @@ module Maruto
 
 				@module_b.must_include :warnings
 				@module_b[:warnings].size.must_equal 1
-				# must include area
-				@module_b[:warnings][0].must_include 'global'
 			end
 			it "will add a warning when overwriting an observer without module dependency" do
 				# TODO
@@ -354,11 +360,12 @@ module Maruto
 			it "will include all areas" do
 				h = ModuleConfiguration.collect_event_observers([])
 
-				h.keys.size.must_equal 3
+				h.keys.size.must_equal 4
 
 				h.must_include :global
 				h.must_include :adminhtml
 				h.must_include :frontend
+				h.must_include :crontab
 
 				h[:global].must_be_kind_of Hash
 				h[:global].size.must_equal 0
@@ -368,6 +375,9 @@ module Maruto
 
 				h[:frontend].must_be_kind_of Hash
 				h[:frontend].size.must_equal 0
+
+				h[:crontab].must_be_kind_of Hash
+				h[:crontab].size.must_equal 0
 			end
 
 			it "will group observers by area" do
@@ -384,6 +394,8 @@ module Maruto
 				h[:frontend].must_include 'e1'
 				h[:frontend]['e1'].must_include 'a_o1'
 				h[:frontend]['e1'].wont_include 'a_o2'
+
+				h[:crontab].wont_include 'e1'
 
 				@module_a.wont_include :warnings
 			end

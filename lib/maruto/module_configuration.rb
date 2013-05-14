@@ -98,7 +98,7 @@ module Maruto::ModuleConfiguration
 	end
 
 	def self.parse_all_event_observers(m, xml_node)
-		areas = [:global, :frontend, :adminhtml]
+		areas = [:global, :frontend, :adminhtml, :crontab]
 		events = {}
 		warnings = []
 		areas.each do |area|
@@ -138,7 +138,7 @@ module Maruto::ModuleConfiguration
 	end
 
 	def self.collect_event_observers(sorted_modules)
-		areas = [:global, :frontend, :adminhtml]
+		areas = [:global, :frontend, :adminhtml, :crontab]
 		events = {}
 
 		areas.each do |area|
