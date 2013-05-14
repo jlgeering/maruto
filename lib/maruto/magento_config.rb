@@ -75,37 +75,6 @@ module Maruto
 							end
 						end
 
-						##########################################################################################
-						# EVENTS
-
-						# TODO same for:
-						# '/config/frontend/events/*'
-						# '/config/adminhtml/events/*'
-						doc.xpath('/config/global/events/*').each do |node|
-							# puts node
-							event = node.name
-							observers = @global_events_observers[event] ||= {}
-
-							node.xpath("observers/*").each do |observer_node|
-								observer_name = observer_node.name
-								if observers.include? observer_name
-									mod_first  = observers[observer_name][:defined]
-									mod_second = mm_name
-									@warnings << "event:#{event} observer:#{observer_name} - defined in #{mod_first} and redefined in #{mod_second}"
-									# TODO check if there is a dependency path between mod_first and mod_second
-									# print_module(mod_first)
-									# print_module(mod_second)
-								end
-								observers[observer_name] = {
-									:class   => observer_node.at_xpath('class').content,
-									:method  => observer_node.at_xpath('method').content,
-									:defined => mm_name,
-								}
-							end
-
-							@global_events_observers[event] = observers
-						end
-
 					end
 				end # modules().each
 

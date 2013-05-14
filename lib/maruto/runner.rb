@@ -43,6 +43,7 @@ class Maruto::Runner < Thor
 
 	desc "warnings", "list potential problems found in the config"
 	method_option :magento_root, :aliases => "-m", :default => "."
+	method_option :with_core, :type => :boolean, :aliases => "-c", :default => false
 	def warnings()
 
 		magento_root = check_magento_folder()
@@ -52,11 +53,19 @@ class Maruto::Runner < Thor
 
 		# next gen maruto:
 
-		all_warnings = Maruto::warnings magento_root
-		all_warnings.group_by { |e| e[:module] }.each do |m,module_warnings|
-			puts "[module:#{m}]"
-			module_warnings.each do |w|
-				puts "   [file:#{w[:file]}] #{w[:message]}"
+		with_core = options[:with_core]
+
+		magento = Maruto::MagentoInstance.load(magento_root)
+
+		magento[:warnings].group_by { |e| e[:module] }.each do |m,module_warnings|
+			if with_core or magento[:all_modules][m][:code_pool] != :core then
+				puts "[module:#{m}]"
+				module_warnings.group_by { |e| e[:file] }.each do |file,warnings|
+					puts "  [file:#{file}]"
+					warnings.each do |w|
+						puts "    #{w[:message]}"
+					end
+				end
 			end
 		end
 
@@ -77,18 +86,41 @@ class Maruto::Runner < Thor
 
 	end
 
-	desc "observers", "list observers sorted and grouped by their events"
+	desc "observers", "list observers sorted and grouped by their event or area"
 	method_option :magento_root, :aliases => "-m", :default => "."
+	method_option :group_by_scope, :type => :boolean, :aliases => "-s", :default => false
 	def observers()
 
 		magento_root = check_magento_folder()
 
-		magento_config = Maruto::MagentoConfig.new magento_root
+		magento = Maruto::MagentoInstance.load(magento_root)
 
-		magento_config.observers.sort_by { |k, v| k }.each do |event, observers|
-			puts event
-			observers.each do |observer|
-				puts "   #{observer}"
+		group_by_scope = options[:group_by_scope]
+
+		if group_by_scope then
+			magento[:event_observers].each do |area, events|
+				events.each do |event, observers|
+					puts "#{area}/#{event}"
+					observers.each do |name, observer|
+						puts "  #{name} (module:#{observer[:module]} type:#{observer[:type]} class:#{observer[:class]} method:#{observer[:method]})"
+					end
+				end
+			end
+		else
+			grouped_by_events = Hash.new
+			magento[:event_observers].each do |area, events|
+				events.each do |event, observers|
+					grouped_by_events[event] ||= Hash.new
+					grouped_by_events[event][area] = observers
+				end
+			end
+			grouped_by_events.sort_by { |k, v| k }.each do |event, areas|
+				puts "#{event}"
+				areas.each do |area, observers|
+					observers.each do |name, observer|
+						puts "  #{area}/#{name} (module:#{observer[:module]} type:#{observer[:type]} class:#{observer[:class]} method:#{observer[:method]})"
+					end
+				end
 			end
 		end
 

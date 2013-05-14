@@ -9,9 +9,10 @@ module Maruto::MagentoInstance
 			sorted_modules, active_modules = Maruto::ModuleDefinition.analyse_module_definitions(all_modules)
 
 			sorted_modules.each do |m|
-				Maruto::ModuleConfiguration.load(m)
-				# ModuleConfiguration.analyse(m, active_modules)
+				Maruto::ModuleConfiguration.parse_module_configuration(m)
 			end
+
+			event_observers = Maruto::ModuleConfiguration.collect_event_observers(sorted_modules)
 
 			# TODO move to function: collect_warnings + write spec
 			warnings = []
@@ -20,10 +21,11 @@ module Maruto::MagentoInstance
 			end
 
 			{
-				:active_modules => active_modules.map{|k,v| v},
-				:all_modules    => all_modules,
-				:sorted_modules => sorted_modules,
-				:warnings       => warnings,
+				:active_modules  => active_modules,
+				:all_modules     => Hash[all_modules.collect { |m| [m[:name], m]}],
+				:sorted_modules  => sorted_modules,
+				:event_observers => event_observers,
+				:warnings        => warnings,
 			}
 		end
 	end

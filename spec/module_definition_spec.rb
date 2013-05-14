@@ -61,6 +61,9 @@ describe Maruto::ModuleDefinition do
 		end
 
 		it "will find dependencies" do
+			h = Maruto::ModuleDefinition.parse_module_definition(@xml_nodes[:Mage_Core])
+			h.wont_include :dependencies
+
 			h = Maruto::ModuleDefinition.parse_module_definition(@xml_nodes[:Mage_Eav])
 			h.must_include :dependencies
 			h[:dependencies].size.must_equal 1
@@ -179,15 +182,25 @@ describe Maruto::ModuleDefinition do
 		end
 		it "will not include inactive modules (in Array or Hash)" do
 			parsed_module_definitions = [
-				@module_a.merge({ :active => false}),
+				@module_a.merge({ :active => false }),
 			]
 			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			a.size.must_equal 0
 			h.size.must_equal 0
 		end
+		it "will warn when a core/Mage_ module is inactive" do
+			parsed_module_definitions = [
+				@module_a.merge({ :active => false, :warnings => ['first warning'] }),
+			]
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
+			a.size.must_equal 0
+			h.size.must_equal 0
+			parsed_module_definitions[0][:warnings].size.must_equal 2
+			parsed_module_definitions[0][:warnings][-1][:message].must_include 'inactive'
+		end
 		it "will remove missing dependencies and add a warning" do
 			parsed_module_definitions = [
-				@module_a.merge({ :active => true, :dependencies => [:Mage_B, :Mage_C], :warnings => ['first warning']}),
+				@module_a.merge({ :active => true, :dependencies => [:Mage_B, :Mage_C], :warnings => ['first warning'] }),
 				@module_b.merge({ :active => true }),
 				@module_c.merge({ :active => false }),
 			]
@@ -198,7 +211,7 @@ describe Maruto::ModuleDefinition do
 		end
 		it "will remove duplicate dependencies and add a warning" do
 			parsed_module_definitions = [
-				@module_a.merge({ :active => true, :dependencies => [:Mage_B, :Mage_C, :Mage_B], :warnings => ['first warning']}),
+				@module_a.merge({ :active => true, :dependencies => [:Mage_B, :Mage_C, :Mage_B], :warnings => ['first warning'] }),
 				@module_b.merge({ :active => true }),
 				@module_c.merge({ :active => true }),
 			]

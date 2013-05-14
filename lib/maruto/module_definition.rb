@@ -90,6 +90,11 @@ module Maruto::ModuleDefinition
 						m[:active] = false
 					end
 				end
+			else
+				if m[:code_pool] == :core and m[:name].to_s.start_with? 'Mage_' then
+					m[:warnings] ||= []
+					m[:warnings] << { :file => m[:defined], :message => "core/#{m[:name]} is inactive, but models and helpers will still be loaded" }
+				end
 			end
 		end
 		# remove inactive modules
