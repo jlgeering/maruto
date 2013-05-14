@@ -21,10 +21,11 @@ module Maruto::MagentoInstance
 			end
 
 			{
-				:active_modules => active_modules,
-				:all_modules    => Hash[all_modules.collect { |m| [m[:name], m]}],
-				:sorted_modules => sorted_modules,
-				:warnings       => warnings,
+				:active_modules  => active_modules,
+				:all_modules     => Hash[all_modules.collect { |m| [m[:name], m]}],
+				:sorted_modules  => sorted_modules,
+				:event_observers => event_observers,
+				:warnings        => warnings,
 			}
 		end
 	end

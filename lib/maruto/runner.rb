@@ -86,18 +86,41 @@ class Maruto::Runner < Thor
 
 	end
 
-	desc "observers", "list observers sorted and grouped by their events"
+	desc "observers", "list observers sorted and grouped by their event or area"
 	method_option :magento_root, :aliases => "-m", :default => "."
+	method_option :group_by_scope, :type => :boolean, :aliases => "-s", :default => false
 	def observers()
 
 		magento_root = check_magento_folder()
 
-		magento_config = Maruto::MagentoConfig.new magento_root
+		magento = Maruto::MagentoInstance.load(magento_root)
 
-		magento_config.observers.sort_by { |k, v| k }.each do |event, observers|
-			puts event
-			observers.each do |observer|
-				puts "   #{observer}"
+		group_by_scope = options[:group_by_scope]
+
+		if group_by_scope then
+			magento[:event_observers].each do |area, events|
+				events.each do |event, observers|
+					puts "#{area}/#{event}"
+					observers.each do |name, observer|
+						puts "  #{name} (module:#{observer[:module]} type:#{observer[:type]} class:#{observer[:class]} method:#{observer[:method]})"
+					end
+				end
+			end
+		else
+			grouped_by_events = Hash.new
+			magento[:event_observers].each do |area, events|
+				events.each do |event, observers|
+					grouped_by_events[event] ||= Hash.new
+					grouped_by_events[event][area] = observers
+				end
+			end
+			grouped_by_events.sort_by { |k, v| k }.each do |event, areas|
+				puts "#{event}"
+				areas.each do |area, observers|
+					observers.each do |name, observer|
+						puts "  #{area}/#{name} (module:#{observer[:module]} type:#{observer[:type]} class:#{observer[:class]} method:#{observer[:method]})"
+					end
+				end
 			end
 		end
 
