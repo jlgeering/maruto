@@ -86,10 +86,10 @@ class Maruto::Runner < Thor
 
 	end
 
-	desc "observers", "list observers sorted and grouped by their event or area"
+	desc "observers FILTER", "list observers sorted and grouped by their event or area, optionally filtered by event name"
 	method_option :magento_root, :aliases => "-m", :default => "."
 	method_option :group_by_scope, :type => :boolean, :aliases => "-s", :default => false
-	def observers()
+	def observers(filter = nil)
 
 		magento_root = check_magento_folder()
 
@@ -100,9 +100,11 @@ class Maruto::Runner < Thor
 		if group_by_scope then
 			magento[:event_observers].each do |area, events|
 				events.each do |event, observers|
-					puts "#{area}/#{event}"
-					observers.each do |name, observer|
-						puts "  #{name} (module:#{observer[:module]} type:#{observer[:type]} class:#{observer[:class]} method:#{observer[:method]})"
+					if filter.nil? or event.include? filter
+						puts "#{area}/#{event}"
+						observers.each do |name, observer|
+							puts "  #{name} (module:#{observer[:module]} type:#{observer[:type]} class:#{observer[:class]} method:#{observer[:method]})"
+						end
 					end
 				end
 			end
@@ -115,10 +117,12 @@ class Maruto::Runner < Thor
 				end
 			end
 			grouped_by_events.sort_by { |k, v| k }.each do |event, areas|
-				puts "#{event}"
-				areas.each do |area, observers|
-					observers.each do |name, observer|
-						puts "  #{area}/#{name} (module:#{observer[:module]} type:#{observer[:type]} class:#{observer[:class]} method:#{observer[:method]})"
+				if filter.nil? or event.include? filter
+					puts "#{event}"
+					areas.each do |area, observers|
+						observers.each do |name, observer|
+							puts "  #{area}/#{name} (module:#{observer[:module]} type:#{observer[:type]} class:#{observer[:class]} method:#{observer[:method]})"
+						end
 					end
 				end
 			end
