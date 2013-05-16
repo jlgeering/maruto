@@ -125,7 +125,7 @@ module Maruto::ModuleConfiguration
 					event[:observers].each do |observer|
 						observer_name = observer[:name]
 						if events[event_name].include? observer_name
-							add_module_config_warning(m, "event_observer:#{area}/#{event_name}/#{observer_name} - defined in #{events[event_name][observer_name][:module]} and redefined in #{m[:name]}")
+							add_module_config_warning(m, "event_observer:#{area}/#{event_name}/#{observer_name} - defined in #{events[event_name][observer_name][:module]} and redefined in #{m[:name]} (use type: disabled instead)")
 						end
 						events[event_name][observer_name] = observer
 						events[event_name][observer_name][:module] = m[:name]
