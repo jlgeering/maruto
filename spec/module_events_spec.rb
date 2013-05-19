@@ -306,13 +306,13 @@ module Maruto
 				@module_a[:events] = {
 					:global => [{ :name => 'e1', :observers => [
 						@observer_1,
-						{ :name => 'a_o2', :type => 'singleton', :class => 'Mage_A_Model_Observer', :method => 'global_2' }
+						{ :name => 'a_o2', :type => :singleton, :class => 'Mage_A_Model_Observer', :method => 'global_2' }
 					] }],
 					:adminhtml => [{ :name => 'e1', :observers => [
-						{ :name => 'a_o1', :type => 'singleton', :class => 'Mage_A_Model_Observer', :method => 'adminhtml_1' }
+						{ :name => 'a_o1', :type => :singleton, :class => 'Mage_A_Model_Observer', :method => 'adminhtml_1' }
 					] }],
 					:frontend => [{ :name => 'e1', :observers => [
-						{ :name => 'a_o1', :type => 'singleton', :class => 'Mage_A_Model_Observer', :method => 'frontend_1' }
+						{ :name => 'a_o1', :type => :singleton, :class => 'Mage_A_Model_Observer', :method => 'frontend_1' }
 					] }]
 				}
 
@@ -346,11 +346,16 @@ module Maruto
 				@module_b.must_include :warnings
 				@module_b[:warnings].size.must_equal 1
 			end
-			it "will add a warning when overwriting an observer without module dependency" do
-				# TODO
-			end
 			it "wont add a warning when overwriting an observer to disable it" do
-				# TODO
+				@observer_1[:type] = :disabled
+				@module_b[:events] = {
+					:global => [{ :name => 'e1', :observers => [ @observer_1 ] }]
+				}
+				h = ModuleConfiguration.collect_scoped_event_observers(:global, [@module_a, @module_b])
+
+				@module_b.wont_include :warnings
+			end
+			it "will add a warning when overwriting an observer without module dependency" do
 			end
 			it "will add a warning when disabling a non-existing observer" do
 				# TODO
