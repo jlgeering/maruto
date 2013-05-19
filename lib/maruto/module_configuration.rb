@@ -131,6 +131,10 @@ module Maruto::ModuleConfiguration
 							unless m.include? :dependencies and m[:dependencies].include? events[event_name][observer_name][:module]
 								add_module_config_warning(m, "module:#{m[:name]} should have a dependency on module:#{events[event_name][observer_name][:module]} because of event_observer:#{area}/#{event_name}/#{observer_name}")
 							end
+						else
+							if observer[:type] == :disabled
+								add_module_config_warning(m, "event_observer:#{area}/#{event_name}/#{observer_name} - cannot disable an inexistant event observer")
+							end
 						end
 						events[event_name][observer_name] = observer
 						events[event_name][observer_name][:module] = m[:name]
