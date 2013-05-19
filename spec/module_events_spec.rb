@@ -437,31 +437,5 @@ module Maruto
 			end
 		end
 
-		describe "when analysing event observers" do
-
-			it "will add a warning when an observer has already been declared" do
-
-			end
-
-			# it "will warn when an event has no observers" do
-			# 	xml_node_no_obs = Nokogiri::XML('''
-			# 		<config><scope><events><first_event></first_event></events></scope></config>
-			# 	''').root
-			# 	events, warnings = ModuleConfiguration.parse_scoped_event_observers('root', xml_node_no_obs.xpath('/config/scope'))
-			# 	events.size.must_equal 0
-			# 	warnings.size.must_equal 1
-			# 	warnings[0].must_include 'root/events/first_event'
-			# end
-			# it "will warn when an event has an empty observers node" do
-			# 	xml_node_empty_obs = Nokogiri::XML('''
-			# 		<config><scope><events><first_event><observers></observers></first_event></events></scope></config>
-			# 	''').root
-			# 	events, warnings = ModuleConfiguration.parse_scoped_event_observers('root', xml_node_empty_obs.xpath('/config/scope'))
-			# 	events.size.must_equal 0
-			# 	warnings.size.must_equal 1
-			# 	warnings[0].must_include 'root/events/first_event/observers'
-			# end
-
-		end
 	end
 end
