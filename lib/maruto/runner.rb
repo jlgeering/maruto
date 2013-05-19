@@ -140,7 +140,7 @@ class Maruto::Runner < Thor
 									 (magento_root + 'app/code').directory? &&
 									 (magento_root + 'app/etc').directory? &&
 									 (magento_root + 'app/etc/modules').directory? &&
-									 (magento_root + 'app/etc/local.xml').file?
+									 (magento_root + 'app/etc/modules/Mage_All.xml').file?
 			raise Thor::Error, "could not find magento in this folder: #{magento_root.realpath}#{options[:magento_root] == '.' ? ' (try -m MAGENTO_ROOT)' : ''}" unless is_magento
 
 			return magento_root
