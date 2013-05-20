@@ -8,9 +8,17 @@ class Maruto::Runner < Thor
 
 	map "-v" => :version, "--version" => :version
 
-	desc "version", "Show Maruto version"
+	desc "version", "Show Maruto and Magento version"
+	method_option :magento_root, :aliases => "-m", :default => "."
 	def version
 		say "Maruto #{Maruto::VERSION}"
+		begin
+			magento_root = check_magento_folder()
+			magento = Maruto::MagentoInstance.load(magento_root)
+			say "Magento #{magento[:version].join('.')}"
+		rescue Thor::Error
+			# do nothing
+		end
 	end
 
 	desc "magento?", "check if MAGENTO_ROOT contains a magento app"
