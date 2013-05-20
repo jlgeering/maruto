@@ -11,7 +11,14 @@ module Maruto::MagentoVersion
 			file.rewind
 			if newer
 				# newer Magento version
-				return []
+				function = read_function(file, 'getVersionInfo')
+				match    = function.match(/return array\(.*'major'.*'(\d)'.*'minor'.*'(\d)'.*'revision'.*'(\d)'.*'patch'.*'(\d)'.*'stability'.*'number'.*\)/)
+				version    = []
+				version[0] = match[1].to_i unless match[1].nil?
+				version[1] = match[2].to_i unless match[2].nil?
+				version[2] = match[3].to_i unless match[3].nil?
+				version[3] = match[4].to_i unless match[4].nil?
+				return version
 			else
 				# older Magento version
 				function = read_function(file, 'getVersion')
