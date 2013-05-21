@@ -5,6 +5,7 @@ module Maruto::MagentoVersion
 
 	def self.read_magento_version()
 		mage = 'app/Mage.php'
+		return nil unless File.exists? mage
 		File.open mage do |file|
 			# newer magento version have a getVersionInfo function
 			newer = file.find { |line| line =~ /getVersionInfo/ }
@@ -12,7 +13,7 @@ module Maruto::MagentoVersion
 			if newer
 				# newer Magento version
 				function = read_function(file, 'getVersionInfo')
-				match    = function.match(/return array\(.*'major'.*'(\d)'.*'minor'.*'(\d)'.*'revision'.*'(\d)'.*'patch'.*'(\d)'.*'stability'.*'number'.*\)/)
+				match    = function.match(/return array\(.*'major'.*'(\d+)'.*'minor'.*'(\d+)'.*'revision'.*'(\d+)'.*'patch'.*'(\d+)'.*'stability'.*'number'.*\)/)
 				version    = []
 				version[0] = match[1].to_i unless match[1].nil?
 				version[1] = match[2].to_i unless match[2].nil?
@@ -22,7 +23,7 @@ module Maruto::MagentoVersion
 			else
 				# older Magento version
 				function = read_function(file, 'getVersion')
-				match    = function.match(/return '(\d)\.(\d)\.?(\d)?\.?(\d)?';/)
+				match    = function.match(/return '(\d+)\.(\d+)\.?(\d+)?\.?(\d+)?';/)
 				version    = []
 				version[0] = match[1].to_i unless match[1].nil?
 				version[1] = match[2].to_i unless match[2].nil?
