@@ -301,18 +301,19 @@ module Maruto
 				@module_c = { :name => :Mage_C, :active => true, :code_pool => :core, :defined => 'c', :config_path => 'app/code/core/Mage/C/etc/config.xml' }
 				@module_d = { :name => :Mage_D, :active => true, :code_pool => :core, :defined => 'd', :config_path => 'app/code/core/Mage/D/etc/config.xml' }
 
-				@observer_1 = { :name => 'a_o1', :type => 'singleton', :class => 'Mage_A_Model_Observer', :method => 'global_1' }
+				@observer_1 = { :name => 'a_o1', :type => :singleton, :class => 'Mage_A_Model_Observer', :method => 'global_1' }
+				@observer_2 = { :name => 'a_o2', :type => :singleton, :class => 'Mage_A_Model_Observer', :method => 'global_2' }
 
 				@module_a[:events] = {
 					:global => [{ :name => 'e1', :observers => [
 						@observer_1,
-						{ :name => 'a_o2', :type => 'singleton', :class => 'Mage_A_Model_Observer', :method => 'global_2' }
+						@observer_2
 					] }],
 					:adminhtml => [{ :name => 'e1', :observers => [
-						{ :name => 'a_o1', :type => 'singleton', :class => 'Mage_A_Model_Observer', :method => 'adminhtml_1' }
+						{ :name => 'a_o1', :type => :singleton, :class => 'Mage_A_Model_Observer', :method => 'adminhtml_1' }
 					] }],
 					:frontend => [{ :name => 'e1', :observers => [
-						{ :name => 'a_o1', :type => 'singleton', :class => 'Mage_A_Model_Observer', :method => 'frontend_1' }
+						{ :name => 'a_o1', :type => :singleton, :class => 'Mage_A_Model_Observer', :method => 'frontend_1' }
 					] }]
 				}
 
@@ -341,19 +342,54 @@ module Maruto
 				@module_b[:events] = {
 					:global => [{ :name => 'e1', :observers => [ @observer_1 ] }]
 				}
+				@module_b[:dependencies] = [:Mage_A]
 				h = ModuleConfiguration.collect_scoped_event_observers(:global, [@module_a, @module_b])
 
 				@module_b.must_include :warnings
 				@module_b[:warnings].size.must_equal 1
 			end
-			it "will add a warning when overwriting an observer without module dependency" do
-				# TODO
-			end
 			it "wont add a warning when overwriting an observer to disable it" do
-				# TODO
+				disabled_observer = @observer_1.clone
+				disabled_observer[:type] = :disabled
+				@module_b[:events] = {
+					:global => [{ :name => 'e1', :observers => [ disabled_observer ] }]
+				}
+				@module_b[:dependencies] = [:Mage_A]
+				h = ModuleConfiguration.collect_scoped_event_observers(:global, [@module_a, @module_b])
+
+				@module_b.wont_include :warnings
+			end
+			it "will add a warning when overwriting an observer without module dependency" do
+				disabled_observer = @observer_2.clone
+				disabled_observer[:type] = :disabled
+
+				@module_b[:events] = {
+					:global => [{ :name => 'e1', :observers => [ @observer_1 ] }]
+				}
+				@module_c[:events] = {
+					:global => [{ :name => 'e1', :observers => [ disabled_observer ] }]
+				}
+				@module_d[:events] = {
+					:global => [{ :name => 'e1', :observers => [ @observer_1, disabled_observer ] }]
+				}
+
+				h = ModuleConfiguration.collect_scoped_event_observers(:global, [@module_a, @module_b])
+				@module_b.must_include :warnings
+				@module_b[:warnings].size.must_equal 2 # 1 for overwriting + 1 for missing dependency
+
+				h = ModuleConfiguration.collect_scoped_event_observers(:global, [@module_a, @module_c])
+				@module_c.must_include :warnings
+				@module_c[:warnings].size.must_equal 1 # 1 for missing dependency
+
+				h = ModuleConfiguration.collect_scoped_event_observers(:global, [@module_a, @module_d])
+				@module_d.must_include :warnings
+				@module_d[:warnings].size.must_equal 3 # 1 for overwriting + 2 for missing dependency
 			end
 			it "will add a warning when disabling a non-existing observer" do
-				# TODO
+				@observer_1[:type] = :disabled
+				h = ModuleConfiguration.collect_scoped_event_observers(:global, [@module_a])
+				@module_a.must_include :warnings
+				@module_a[:warnings].size.must_equal 1
 			end
 
 
@@ -401,31 +437,5 @@ module Maruto
 			end
 		end
 
-		describe "when analysing event observers" do
-
-			it "will add a warning when an observer has already been declared" do
-
-			end
-
-			# it "will warn when an event has no observers" do
-			# 	xml_node_no_obs = Nokogiri::XML('''
-			# 		<config><scope><events><first_event></first_event></events></scope></config>
-			# 	''').root
-			# 	events, warnings = ModuleConfiguration.parse_scoped_event_observers('root', xml_node_no_obs.xpath('/config/scope'))
-			# 	events.size.must_equal 0
-			# 	warnings.size.must_equal 1
-			# 	warnings[0].must_include 'root/events/first_event'
-			# end
-			# it "will warn when an event has an empty observers node" do
-			# 	xml_node_empty_obs = Nokogiri::XML('''
-			# 		<config><scope><events><first_event><observers></observers></first_event></events></scope></config>
-			# 	''').root
-			# 	events, warnings = ModuleConfiguration.parse_scoped_event_observers('root', xml_node_empty_obs.xpath('/config/scope'))
-			# 	events.size.must_equal 0
-			# 	warnings.size.must_equal 1
-			# 	warnings[0].must_include 'root/events/first_event/observers'
-			# end
-
-		end
 	end
 end

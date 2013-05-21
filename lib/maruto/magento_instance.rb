@@ -1,10 +1,13 @@
 
+require 'maruto/magento_version'
 require 'maruto/module_definition'
 require 'maruto/module_configuration'
 
 module Maruto::MagentoInstance
 	def self.load(magento_root)
 		Dir.chdir(magento_root) do
+			magento_version = Maruto::MagentoVersion.read_magento_version()
+
 			all_modules = Maruto::ModuleDefinition.parse_all_module_definitions()
 			sorted_modules, active_modules = Maruto::ModuleDefinition.analyse_module_definitions(all_modules)
 
@@ -25,6 +28,7 @@ module Maruto::MagentoInstance
 				:all_modules     => Hash[all_modules.collect { |m| [m[:name], m]}],
 				:sorted_modules  => sorted_modules,
 				:event_observers => event_observers,
+				:version         => magento_version,
 				:warnings        => warnings,
 			}
 		end
