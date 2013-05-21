@@ -40,7 +40,8 @@ class Maruto::Runner < Thor
 				begin
 					firstline = File.open(file, &:readline)
 					# TODO return list of warnings
-					puts file unless firstline.start_with?("<?php")
+					# TODO case insensitive
+					puts file unless firstline.start_with?("<?php") or firstline.start_with?("<?PHP")
 				rescue
 					# TODO return list of errors
 					puts "error in " + file
