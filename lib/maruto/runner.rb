@@ -92,6 +92,24 @@ class Maruto::Runner < Thor
 			puts "#{name} #{group}"
 		end
 
+	end
+
+	desc "modules FILTER", "list modules, optionally filtered by event name"
+	method_option :magento_root, :aliases => "-m", :default => "."
+	def modules(filter = nil)
+
+		magento_root = check_magento_folder()
+
+		magento = Maruto::MagentoInstance.load(magento_root)
+
+
+		magento[:all_modules].each do |name, m|
+			if filter.nil? or name.to_s.include? filter
+				deps = ''
+				deps = ", dependencies:[#{m[:dependencies].collect{ |d| d.to_s }.join(', ')}]" if m[:dependencies]
+				puts "#{name}(active:#{m[:active]}, code_pool:#{m[:code_pool]}, defined:#{m[:defined]}#{deps})"
+			end
+		end
 
 	end
 
