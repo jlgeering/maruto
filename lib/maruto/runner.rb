@@ -1,4 +1,5 @@
 require 'maruto'
+require 'colorize'
 require 'nokogiri'
 require 'pathname'
 require 'thor'
@@ -68,11 +69,11 @@ class Maruto::Runner < Thor
 
 		magento[:warnings].group_by { |e| e[:module] }.each do |m,module_warnings|
 			if with_core or magento[:all_modules][m][:code_pool] != :core then
-				puts "[module:#{m}]"
+				puts "[module:#{m}]".blue
 				module_warnings.group_by { |e| e[:file] }.each do |file,warnings|
-					puts "  [file:#{file}]"
+					puts "  [file:#{file}]".black
 					warnings.each do |w|
-						puts "    #{w[:message]}"
+						puts "    #{w[:message]}".red
 					end
 				end
 			end
@@ -125,7 +126,7 @@ class Maruto::Runner < Thor
 			magento[:event_observers].each do |area, events|
 				events.each do |event, observers|
 					if filter.nil? or event.include? filter
-						puts "#{area}/#{event}"
+						puts "#{area}/#{event}".blue
 						observers.each do |name, observer|
 							puts "  #{name} (module:#{observer[:module]} type:#{observer[:type]} class:#{observer[:class]} method:#{observer[:method]})"
 						end
@@ -142,7 +143,7 @@ class Maruto::Runner < Thor
 			end
 			grouped_by_events.sort_by { |k, v| k }.each do |event, areas|
 				if filter.nil? or event.include? filter
-					puts "#{event}"
+					puts "#{event}".blue
 					areas.each do |area, observers|
 						observers.each do |name, observer|
 							puts "  #{area}/#{name} (module:#{observer[:module]} type:#{observer[:type]} class:#{observer[:class]} method:#{observer[:method]})"
