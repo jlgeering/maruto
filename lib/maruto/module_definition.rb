@@ -5,23 +5,32 @@ require 'tsort'
 module Maruto::ModuleDefinition
 
 	def self.parse_module_definition(xml_node)
-		module_definition = {
-			:name      => xml_node.name.to_sym,
-			:active    => !(/^(false|off)$/ =~ xml_node.at_xpath('active').content),
-			:code_pool => xml_node.at_xpath('codePool').content.to_sym,
-		}
+		module_definition = { :name => xml_node.name.to_sym }
+
+		module_definition[:active]    = !(/^(false|off)$/ =~ xml_node.at_xpath('active').content) if xml_node.at_xpath('active')
+		module_definition[:code_pool] = xml_node.at_xpath('codePool').content.to_sym if xml_node.at_xpath('codePool')
 
 		deps = xml_node.xpath('depends/*').map { |e| e.name.to_sym }
 		module_definition[:dependencies] = deps if deps.size > 0
 
-		unless /^(true|false|off)$/ =~ xml_node.at_xpath('active').content then
+		unless xml_node.at_xpath('active') and /^(true|false|off)$/ =~ xml_node.at_xpath('active').content then
 			module_definition[:warnings] = []
-			module_definition[:warnings] << { :message => "value for active element should be in ['true','false','off'] (element: #{xml_node.at_xpath('active')})" }
+			# TODO write test
+			if xml_node.at_xpath('active')
+				module_definition[:warnings] << { :message => "value for active element should be in ['true','false','off'] (element: #{xml_node.at_xpath('active')})" }
+			else
+				module_definition[:warnings] << { :message => "missing element: active (#{xml_node.path})" }
+			end
 		end
 
-		unless /^(core|community|local)$/ =~ xml_node.at_xpath('codePool').content then
+		unless xml_node.at_xpath('codePool') and /^(core|community|local)$/ =~ xml_node.at_xpath('codePool').content then
 			module_definition[:warnings] ||= []
-			module_definition[:warnings] << { :message => "value for codePool element should be in ['core','community','local'] (element: #{xml_node.at_xpath('codePool')})" }
+			# TODO write test
+			if xml_node.at_xpath('codePool')
+				module_definition[:warnings] << { :message => "value for codePool element should be in ['core','community','local'] (element: #{xml_node.at_xpath('codePool')})" }
+			else
+				module_definition[:warnings] << { :message => "missing element: codePool (#{xml_node.path})" }
+			end
 		end
 
 		module_definition
@@ -68,14 +77,14 @@ module Maruto::ModuleDefinition
 	def self.analyse_module_definitions(module_definitions)
 		h = Hash.new
 		module_definitions.each do |m|
+			mod_name = m[:name]
+			if h.include? mod_name then
+				# disable first module
+				h[mod_name][:active] = false
+				m[:warnings] ||= []
+				m[:warnings] << { :file => m[:defined], :message => "duplicate module definition (in '#{h[mod_name][:defined]}' and '#{m[:defined]}')" }
+			end
 			if m[:active]
-				mod_name = m[:name]
-				if h.include? mod_name then
-					# disable first module
-					h[mod_name][:active] = false
-					m[:warnings] ||= []
-					m[:warnings] << { :file => m[:defined], :message => "duplicate module definition (in '#{h[mod_name][:defined]}' and '#{m[:defined]}')" }
-				end
 				parts = mod_name.to_s.split('_')
 				h[mod_name] = m
 				if parts.size != 2
