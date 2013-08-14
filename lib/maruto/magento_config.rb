@@ -127,13 +127,17 @@ module Maruto
 			name = xml_node.name
 			config = {
 				:active       => xml_node.at_xpath('active').content == 'true',
-				:code_pool    => xml_node.at_xpath('codePool').content,
 				:dependencies => xml_node.xpath('depends/*').map(&:name),
 				:defined      => file,
 			}
+			# deprecated will be deleted
+			if xml_node.at_xpath('codePool') then
+				config[:code_pool] = xml_node.at_xpath('codePool').content
+			else
+				#@warnings << "module:#{name} - ..."
+			end
 			if @modules.include? name then
-				# TODO test this
-				@warnings << "module:#{name} - duplicate module definition (#{@modules[name][:defined]} and file)"
+				#@warnings << "module:#{name} - duplicate module definition (#{@modules[name][:defined]} and file)"
 			end
 			@modules[name] = config
 		end
