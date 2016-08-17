@@ -196,7 +196,7 @@ describe Maruto::ModuleDefinition do
 				@module_e.merge({ :active => true }),
 				@module_f.merge({ :active => true }),
 			]
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
+			_,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			h.keys.must_equal [:Mage_A, :Short, :Long_A_B]
 		end
 		it "will warn when a core/Mage_ module is inactive" do
@@ -215,7 +215,7 @@ describe Maruto::ModuleDefinition do
 				@module_b.merge({ :active => true }),
 				@module_c.merge({ :active => false }),
 			]
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
+			_,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			h[:Mage_A][:dependencies].size.must_equal 1
 			h[:Mage_A][:warnings].size.must_equal 2
 			h[:Mage_A][:warnings][-1][:file].must_equal @module_a[:defined]
@@ -226,7 +226,7 @@ describe Maruto::ModuleDefinition do
 				@module_b.merge({ :active => true }),
 				@module_c.merge({ :active => true }),
 			]
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
+			_,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			h[:Mage_A][:dependencies].size.must_equal 2
 			h[:Mage_A][:warnings].size.must_equal 2
 			h[:Mage_A][:warnings][-1][:file].must_equal @module_a[:defined]
@@ -237,7 +237,7 @@ describe Maruto::ModuleDefinition do
 				@module_e.merge({ :active => true }),
 				@module_f.merge({ :active => true }),
 			]
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
+			_,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			h[:Mage_A][:config_path].must_equal 'app/code/core/Mage/A/etc/config.xml'
 			h[:Mage_A].wont_include :warnings
 			h[:Short][:config_path].must_equal 'app/code/core/Short/etc/config.xml'
@@ -249,7 +249,7 @@ describe Maruto::ModuleDefinition do
 			parsed_module_definitions = [
 				{ :name => :Hello_World, :code_pool => :core, :active => true, :defined => 'hello', :warnings => ['first warning'] },
 			]
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
+			_,_ = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			parsed_module_definitions[0][:active].must_equal false
 			parsed_module_definitions[0][:warnings].size.must_equal 2
 			parsed_module_definitions[0][:warnings][-1][:file].must_equal 'hello'
@@ -261,7 +261,7 @@ describe Maruto::ModuleDefinition do
 				@module_c.merge({ :active => true, :dependencies => [:Mage_B, :Mage_A] }),
 				@module_d.merge({ :active => true, :dependencies => [:Mage_B] }),
 			]
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
+			a,_ = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			a.map{|m| m[:name]}.must_equal [:Mage_B, :Mage_D, :Mage_A, :Mage_C]
 		end
 		it "will deactivate the first one, add a warning on the second one and use the second one to the Hash when 2 active modules have the same name" do
