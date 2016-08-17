@@ -78,6 +78,10 @@ class Maruto::Runner < Thor
 			end
 		end
 
+		if magento[:warnings].empty?
+			exit 0
+		end
+		exit 1
 	end
 
 	desc "models", "list models sorted and grouped by their group_name"
@@ -171,5 +175,3 @@ class Maruto::Runner < Thor
 		end
 	end
 end
-
-

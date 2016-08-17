@@ -3,7 +3,7 @@
 
 # Maruto
 
-Magento Ruby Tools, requires ruby >= 1.9.2
+Magento Ruby Tools, requires ruby >= 2
 
 ## Installation
 
