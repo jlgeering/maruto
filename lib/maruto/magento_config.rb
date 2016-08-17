@@ -40,7 +40,8 @@ module Maruto
 						config_path = "app/code/#{mm_config[:code_pool]}/#{mm_name.gsub(/_/, '/')}/etc/config.xml"
 
 						if !File.exist?(config_path)
-							@warnings << "module:#{mm_name} is defined (#{mm_config[:defined]}) but does not exists (#{config_path})"
+							# duplicate warning see new code in module_definition.rb
+							# @warnings << "module:#{mm_name} is defined (#{mm_config[:defined]}) but does not exists (#{config_path})"
 							next
 						end
 
