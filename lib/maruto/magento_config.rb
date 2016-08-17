@@ -37,9 +37,7 @@ module Maruto
 						# puts mm_name
 						# puts mm_config
 
-						parts = mm_name.split('_')
-						abort "module:#{mm_name} - unrecognized module name format" unless parts.size == 2
-						config_path = "app/code/#{mm_config[:code_pool]}/#{parts[0]}/#{parts[1]}/etc/config.xml"
+						config_path = "app/code/#{mm_config[:code_pool]}/#{mm_name.gsub(/_/, '/')}/etc/config.xml"
 
 						if !File.exists?(config_path)
 							@warnings << "module:#{mm_name} is defined (#{mm_config[:defined]}) but does not exists (#{config_path})"

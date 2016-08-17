@@ -170,10 +170,12 @@ describe Maruto::ModuleDefinition do
 
 	describe "when analysing module definitions" do
 		before do
-			@module_a = { :name => :Mage_A, :code_pool => :core, :defined => 'a'}
-			@module_b = { :name => :Mage_B, :code_pool => :core, :defined => 'b'}
-			@module_c = { :name => :Mage_C, :code_pool => :core, :defined => 'c'}
-			@module_d = { :name => :Mage_D, :code_pool => :core, :defined => 'd'}
+			@module_a = { :name => :Mage_A,   :code_pool => :core, :defined => 'app/etc/modules/SomeFile.xml'}
+			@module_b = { :name => :Mage_B,   :code_pool => :core, :defined => 'app/etc/modules/SomeFile.xml'}
+			@module_c = { :name => :Mage_C,   :code_pool => :core, :defined => 'app/etc/modules/SomeFile.xml'}
+			@module_d = { :name => :Mage_D,   :code_pool => :core, :defined => 'app/etc/modules/SomeFile.xml'}
+			@module_e = { :name => :Short,    :code_pool => :core, :defined => 'app/etc/modules/SomeFile.xml'}
+			@module_f = { :name => :Long_A_B, :code_pool => :core, :defined => 'app/etc/modules/SomeFile.xml'}
 		end
 		it "will return an Array and a Hash" do
 			a,h = Maruto::ModuleDefinition.analyse_module_definitions([])
@@ -187,6 +189,15 @@ describe Maruto::ModuleDefinition do
 			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			a.size.must_equal 0
 			h.size.must_equal 0
+		end
+		it "will include active modules (in Array or Hash)" do
+			parsed_module_definitions = [
+				@module_a.merge({ :active => true }),
+				@module_e.merge({ :active => true }),
+				@module_f.merge({ :active => true }),
+			]
+			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
+			h.keys.must_equal [:Mage_A, :Short, :Long_A_B]
 		end
 		it "will warn when a core/Mage_ module is inactive" do
 			parsed_module_definitions = [
@@ -220,23 +231,19 @@ describe Maruto::ModuleDefinition do
 			h[:Mage_A][:warnings].size.must_equal 2
 			h[:Mage_A][:warnings][-1][:file].must_equal @module_a[:defined]
 		end
-		it "will deactivate modules with an invalid name and add a warning" do
-			parsed_module_definitions = [
-				{ :name => :a, :active => true, :defined => 'a', :warnings => ['first warning'] },
-			]
-			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
-			parsed_module_definitions[0][:active].must_equal false
-			parsed_module_definitions[0][:warnings].size.must_equal 2
-			parsed_module_definitions[0][:warnings][-1][:message].must_include "invalid module name"
-			parsed_module_definitions[0][:warnings][-1][:file].must_equal 'a'
-		end
 		it "will add the path to the module's config.xml" do
 			parsed_module_definitions = [
 				@module_a.merge({ :active => true }),
+				@module_e.merge({ :active => true }),
+				@module_f.merge({ :active => true }),
 			]
 			a,h = Maruto::ModuleDefinition.analyse_module_definitions(parsed_module_definitions)
 			h[:Mage_A][:config_path].must_equal 'app/code/core/Mage/A/etc/config.xml'
 			h[:Mage_A].wont_include :warnings
+			h[:Short][:config_path].must_equal 'app/code/core/Short/etc/config.xml'
+			h[:Short].wont_include :warnings
+			h[:Long_A_B][:config_path].must_equal 'app/code/core/Long/A/B/etc/config.xml'
+			h[:Long_A_B].wont_include :warnings
 		end
 		it "will deactivate modules without a config.xml and add a warning" do
 			parsed_module_definitions = [
@@ -274,4 +281,3 @@ describe Maruto::ModuleDefinition do
 	end
 
 end
-

@@ -85,19 +85,12 @@ module Maruto::ModuleDefinition
 				m[:warnings] << { :file => m[:defined], :message => "duplicate module definition (in '#{h[mod_name][:defined]}' and '#{m[:defined]}')" }
 			end
 			if m[:active]
-				parts = mod_name.to_s.split('_')
 				h[mod_name] = m
-				if parts.size != 2
+				m[:config_path] = "app/code/#{m[:code_pool]}/#{mod_name.to_s.gsub(/_/, '/')}/etc/config.xml"
+				if !File.exists?(m[:config_path])
 					m[:warnings] ||= []
-					m[:warnings] << { :file => m[:defined], :message => "invalid module name" }
+					m[:warnings]<< { :file => m[:defined], :message => "config.xml is missing (searching '#{m[:config_path]}' for #{m[:name]})" }
 					m[:active] = false
-				else
-					m[:config_path] = "app/code/#{m[:code_pool]}/#{parts[0]}/#{parts[1]}/etc/config.xml"
-					if !File.exists?(m[:config_path])
-						m[:warnings] ||= []
-						m[:warnings]<< { :file => m[:defined], :message => "config.xml is missing (searching '#{m[:config_path]}' for #{m[:name]})" }
-						m[:active] = false
-					end
 				end
 			else
 				if m[:code_pool] == :core and m[:name].to_s.start_with? 'Mage_' then
