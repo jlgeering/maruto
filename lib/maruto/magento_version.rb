@@ -5,7 +5,7 @@ module Maruto::MagentoVersion
 
 	def self.read_magento_version()
 		mage = 'app/Mage.php'
-		return nil unless File.exists? mage
+		return nil unless File.exist? mage
 		File.open mage do |file|
 			# newer magento version have a getVersionInfo function
 			newer = file.find { |line| line =~ /getVersionInfo/ }
