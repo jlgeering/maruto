@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 
 require 'maruto/magento_version'
 require 'maruto/module_definition'

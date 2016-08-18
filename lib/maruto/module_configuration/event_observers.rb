@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Maruto::ModuleConfiguration
 
 	def self.parse_scoped_event_observers(base_path, xml_node)

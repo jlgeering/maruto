@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'minitest/autorun'
 
 # https://github.com/CapnKernul/minitest-reporters
@@ -5,4 +7,3 @@ require 'minitest/autorun'
 # require 'minitest/reporters'
 # MiniTest::Reporters.use!
 # MiniTest::Reporters.use! MiniTest::Reporters::SpecReporter.new
-

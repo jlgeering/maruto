@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'maruto'
 require 'nokogiri'
 require 'pathname'
