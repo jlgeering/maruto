@@ -1,3 +1,4 @@
+[![Gem Version](https://badge.fury.io/rb/maruto.svg)](https://badge.fury.io/rb/maruto)
 [![Build Status](https://travis-ci.org/jlgeering/maruto.png)](https://travis-ci.org/jlgeering/maruto)
 
 
