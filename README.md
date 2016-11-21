@@ -32,3 +32,8 @@ Or install it yourself as:
 5. Commit your changes (`git commit -am 'Add some feature'`)
 6. Push to the branch (`git push origin my-new-feature`)
 7. Create new Pull Request
+
+## See Also
+
+* Version 2, in Clojure: [clojento](https://github.com/jlgeering/clojento)
+* Version 3, in Elixir: [magixir](https://github.com/jlgeering/magixir)
