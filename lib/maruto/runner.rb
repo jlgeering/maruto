@@ -42,6 +42,7 @@ class Maruto::Runner < Thor
 					# TODO return list of warnings
 					# TODO case insensitive
 					puts file unless firstline.start_with?("<?php") or firstline.start_with?("<?PHP")
+
 				rescue
 					# TODO return list of errors
 					puts "error in " + file
@@ -94,6 +95,24 @@ class Maruto::Runner < Thor
 
 		magento_config.models.sort_by { |k, v| k }.each do |name,group|
 			puts "#{name} #{group}"
+		end
+
+	end
+
+	desc "rewrites", "list models sorted and grouped by their group_name"
+	method_option :magento_root, :aliases => "-m", :default => "."
+	def rewrites()
+
+		magento_root = check_magento_folder()
+
+		magento_config = Maruto::MagentoConfig.new magento_root
+
+		magento_config.models.sort_by { |k, v| k }.each do |name,group|
+			if group[:rewrites]
+				group[:rewrites].each do |k,v|
+					puts "#{name}/#{k} (#{v[:defined]} #{v[:class]})"
+				end
+			end
 		end
 
 	end
